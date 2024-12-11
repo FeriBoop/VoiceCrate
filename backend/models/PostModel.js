@@ -10,14 +10,9 @@ var PostSchema = new Schema({
     ref: 'users',
     required: true,
   },
-  upvotes: { type: Number, default: 0 },
-  downvotes: { type: Number, default: 0 },
-  comments: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: 'comments',
-    },
-  ],
+
+  score: { type: Number, required: true, default: 0 },
+  commentsNumber: { type: Number, required: true, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

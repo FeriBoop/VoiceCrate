@@ -1,4 +1,4 @@
-//var dbAuth = require('./dbdata');
+// var dbAuth = require('./dbdata');
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -7,20 +7,19 @@ var logger = require('morgan');
 var mongoose = require('mongoose');
 //CORS - React demo
 var cors = require('cors');
-/*
-var mongoDB =
-  'mongodb+srv://' +
-  dbAuth +
-  '@yourvoice.beii5.mongodb.net/YourVoice?retryWrites=true&w=majority&appName=YourVoice';
-mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
-*/
+
+// var mongoDB =
+//   'mongodb+srv://' +
+//   dbAuth +
+//   '@yourvoice.beii5.mongodb.net/YourVoice?retryWrites=true&w=majority&appName=YourVoice';
+// mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
+
 // LOKALNA POVEZAVA - MORA DELAT (ZAKOMENTIRAJ ZGORNJO KODO IN UPORABI ZAKOMENTIRANO)
 const mongoDB = 'mongodb://localhost:27017/YourVoice';
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-
 
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
@@ -67,7 +66,8 @@ app.use(
     origin: function (origin, callback) {
       // allow requests with no origin
       // (like mobile apps or curl requests)
-      if (!origin) return callback(null, true);
+      if (!origin)
+          return callback(null, true);
       if (allowedOrigins.indexOf(origin) === -1) {
         var msg =
           'The CORS policy for this site does not ' +
