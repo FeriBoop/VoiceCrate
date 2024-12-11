@@ -60,7 +60,7 @@ const Posts: React.FC = () => {
         localStorage.setItem('lastPage', page.toString()); // Save current page to localStorage
       })
       .catch((error) => {
-        console.error('Napaka pri pridobivanju objav:', error);
+        console.error('Error loading posts:', error);
         setLoading(false);
       });
   };
@@ -101,11 +101,11 @@ const Posts: React.FC = () => {
         if (response.ok) {
           loadPosts(currentPage);
         } else {
-          console.error('Napaka pri brisanju objave');
+          console.error('Error deleting post');
         }
       })
       .catch((error) => {
-        console.error('Napaka pri brisanju objave:', error);
+        console.error('Error deleting post:', error);
       });
   };
 

@@ -15,7 +15,6 @@ var mongoDB =
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 */
 // LOKALNA POVEZAVA - MORA DELAT (ZAKOMENTIRAJ ZGORNJO KODO IN UPORABI ZAKOMENTIRANO)
-
 const mongoDB = 'mongodb://localhost:27017/YourVoice';
 mongoose.connect(mongoDB, {
   useNewUrlParser: true,
