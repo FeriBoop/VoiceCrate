@@ -47,7 +47,7 @@ const PostDetail: React.FC = () => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
-  // Ustvarite ref za textarea
+  // Create ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const fetchPost = () => {
@@ -64,23 +64,23 @@ const PostDetail: React.FC = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Napaka pri pridobivanju objave:', error);
+        console.error('Error fetching post:', error);
         setLoading(false);
       });
   };
 
   useEffect(() => {
-    fetchPost(); // Inicialno naložite podatke o objavi
+    fetchPost(); // Initially load post data
   }, [id]);
 
   const handleCommentSubmit = () => {
     if (newComment.trim() === '') {
-      alert('Komentar ne sme biti prazen.');
+      alert('Comment cannot be empty.');
       return;
     }
 
     if (!user) {
-      alert('Prijavite se za dodajanje komentarja.');
+      alert('Please log in to add a comment.');
       return;
     }
 
@@ -96,23 +96,23 @@ const PostDetail: React.FC = () => {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Napaka pri dodajanju komentarja');
+          throw new Error('Error adding comment');
         }
         return response.json();
       })
       .then(() => {
-        setNewComment(''); // Počistite vnos
+        setNewComment(''); // Clear input
         onClose();
-        fetchPost(); // Ponovno naložite objavo, da pridobite najnovejše komentarje
+        fetchPost(); // Reload post to get updated comments
       })
       .catch((error) => {
-        console.error('Napaka pri dodajanju komentarja:', error);
+        console.error('Error adding comment:', error);
       });
   };
 
   const handleCommentDelete = (commentId: string) => {
     if (!user) {
-      alert('Prijavite se za brisanje komentarja.');
+      alert('Please log in to delete a comment.');
       return;
     }
 
@@ -124,12 +124,12 @@ const PostDetail: React.FC = () => {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error('Napaka pri brisanju komentarja');
+          throw new Error('Error deleting comment');
         }
-        fetchPost(); // Ponovno naložite objavo, da pridobite najnovejše komentarje
+        fetchPost(); // Reload post to get updated comments
       })
       .catch((error) => {
-        console.error('Napaka pri brisanju komentarja:', error);
+        console.error('Error deleting comment:', error);
       });
   };
 
@@ -142,8 +142,12 @@ const PostDetail: React.FC = () => {
       borderRadius="lg"
       shadow="lg"
     >
-      <Button onClick={() => navigate('/posts')} colorScheme="teal" mb={6}>
-        Nazaj na objave
+      <Button onClick={() => {
+        const lastPage = localStorage.getItem('lastPage');
+        const page = lastPage ? parseInt(lastPage) : 1; // Default to page 1 if no page is saved
+        navigate(`/posts?page=${page}`);
+      }} colorScheme="teal" mb={6}>
+        Back to Posts
       </Button>
       {loading ? (
         <Spinner size="xl" />
@@ -155,26 +159,26 @@ const PostDetail: React.FC = () => {
           <Divider mb={4} />
           <Flex justify="space-between" color="gray.500" fontSize="sm" mb={6}>
             <Text>
-              Kategorija: <strong>{post.category}</strong>
+              Category: <strong>{post.category}</strong>
             </Text>
             <Text>
-              Datum: <b>{new Date(post.createdAt).toLocaleDateString()}</b>
+              Date: <b>{new Date(post.createdAt).toLocaleDateString()}</b>
             </Text>
           </Flex>
           <Text color="gray.500" fontSize="sm" mb={4}>
-            Avtor:{' '}
-            <strong>{post.userId?.username || 'Neznan uporabnik'}</strong>
+            Author:{' '}
+            <strong>{post.userId?.username || 'Unknown user'}</strong>
           </Text>
           <Text fontSize="md" lineHeight="tall" mt={4} color="gray.700">
             {post.content}
           </Text>
           <Divider my={6} />
           <Heading as="h3" size="md" mb={4}>
-            Komentarji
+            Comments
           </Heading>
 
           <Button colorScheme="teal" mb={4} onClick={onOpen}>
-            Dodaj komentar
+            Add Comment
           </Button>
 
           {post.comments && post.comments.length > 0 ? (
@@ -205,7 +209,7 @@ const PostDetail: React.FC = () => {
                         mt={2}
                         onClick={() => handleCommentDelete(comment._id)}
                       >
-                        Izbriši
+                        Delete
                       </Button>
                     )}
                   </Box>
@@ -213,40 +217,36 @@ const PostDetail: React.FC = () => {
             </VStack>
           ) : (
             <Text color="gray.500">
-              Ni komentarjev. Bodite prvi, ki komentirate!
+              No comments yet. Be the first to comment!
             </Text>
           )}
 
-          <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            initialFocusRef={textareaRef}
-          >
+          <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={textareaRef}>
             <ModalOverlay />
             <ModalContent>
-              <ModalHeader>Dodaj komentar</ModalHeader>
+              <ModalHeader>Add Comment</ModalHeader>
               <ModalCloseButton />
               <ModalBody>
                 <Textarea
-                  ref={textareaRef} // Povezava referenc
-                  placeholder="Vnesite svoj komentar..."
+                  ref={textareaRef}
+                  placeholder="Enter your comment..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                 />
               </ModalBody>
               <ModalFooter>
                 <Button colorScheme="teal" onClick={handleCommentSubmit}>
-                  Objavi
+                  Submit
                 </Button>
                 <Button onClick={onClose} ml={3}>
-                  Prekliči
+                  Cancel
                 </Button>
               </ModalFooter>
             </ModalContent>
           </Modal>
         </>
       ) : (
-        <Text color="red.500">Objava ni najdena.</Text>
+        <Text color="red.500">Post not found.</Text>
       )}
     </Box>
   );
