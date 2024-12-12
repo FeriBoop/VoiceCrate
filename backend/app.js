@@ -1,4 +1,3 @@
-// var dbAuth = require('./dbdata');
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
@@ -8,18 +7,22 @@ var mongoose = require('mongoose');
 //CORS - React demo
 var cors = require('cors');
 
-// var mongoDB =
-//   'mongodb+srv://' +
-//   dbAuth +
-//   '@yourvoice.beii5.mongodb.net/YourVoice?retryWrites=true&w=majority&appName=YourVoice';
-// mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
-
-// LOKALNA POVEZAVA - MORA DELAT (ZAKOMENTIRAJ ZGORNJO KODO IN UPORABI ZAKOMENTIRANO)
-const mongoDB = 'mongodb://localhost:27017/YourVoice';
-mongoose.connect(mongoDB, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+var mongoDB = ""
+if (process.env.LOCAL_MONGODB === undefined) {
+    var dbAuth = require('./dbdata');
+    mongoDB =
+        'mongodb+srv://' +
+        dbAuth +
+        '@yourvoice.beii5.mongodb.net/YourVoice?retryWrites=true&w=majority&appName=YourVoice';
+    mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true});
+}
+else{
+    mongoDB = 'mongodb://localhost:27017/YourVoice';
+    mongoose.connect(mongoDB, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    });
+}
 
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
@@ -28,6 +31,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/UserRoutes');
 var postsRouter = require('./routes/PostRoutes');
+var voteRouter = require('./routes/VoteRoutes');
 
 var app = express();
 
@@ -44,61 +48,62 @@ const oneDay = 1000 * 60 * 60 * 24;
 var session = require('express-session');
 var MongoStore = require('connect-mongo');
 app.use(
-  session({
-    name: 'session',
-    secret: 'this is a secret key',
-    resave: true,
-    saveUninitialized: false,
-    cookie: { maxAge: oneDay },
-    store: MongoStore.create({ mongoUrl: mongoDB }),
-  })
+    session({
+        name: 'session',
+        secret: 'this is a secret key',
+        resave: true,
+        saveUninitialized: false,
+        cookie: {maxAge: oneDay},
+        store: MongoStore.create({mongoUrl: mongoDB}),
+    })
 );
 
 var allowedOrigins = [
-  'http://localhost:4200',
-  'http://localhost:4100',
-  'http://localhost:3000',
+    'http://localhost:4200',
+    'http://localhost:4100',
+    'http://localhost:3000',
 ];
 
 app.use(
-  cors({
-    credentials: true,
-    origin: function (origin, callback) {
-      // allow requests with no origin
-      // (like mobile apps or curl requests)
-      if (!origin)
-          return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        var msg =
-          'The CORS policy for this site does not ' +
-          'allow access from the specified Origin.';
-        return callback(new Error(msg), false);
-      }
-      return callback(null, true);
-    },
-  })
+    cors({
+        credentials: true,
+        origin: function (origin, callback) {
+            // allow requests with no origin
+            // (like mobile apps or curl requests)
+            if (!origin)
+                return callback(null, true);
+            if (allowedOrigins.indexOf(origin) === -1) {
+                var msg =
+                    'The CORS policy for this site does not ' +
+                    'allow access from the specified Origin.';
+                return callback(new Error(msg), false);
+            }
+            return callback(null, true);
+        },
+    })
 );
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/user', usersRouter);
 app.use('/post', postsRouter);
+app.use('/vote', postsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
-  next(createError(404));
+    next(createError(404));
 });
 
 // error handler
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 });
 
 module.exports = app;
