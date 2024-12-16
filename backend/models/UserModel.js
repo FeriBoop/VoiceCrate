@@ -1,55 +1,87 @@
 var mongoose = require('mongoose');
-var Schema   = mongoose.Schema;
+var Schema = mongoose.Schema;
 var bcrypt = require('bcrypt');
 var SALT_WORK_FACTOR = 10;
 
+/**
+ * USER MODEL
+ */
 var UserSchema = new Schema({
-	username: { type: String, required: true, unique: true },
-	email: { type: String, required: true, unique: true, match: /.+\@.+\..+/ },
-    password: { type: String, required: true,
-		validate: {
-			validator: function(v) {
-				return /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/.test(v); 
-			}, 
-			message: props => 'Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko.' 
-		} 
-	},
-    role: { type: String, enum: ['user', 'moderator', 'admin'], default: 'user' },
-    bio: { type: String, default: '', },
-	avatar: { type: String, default: ''},
-    isBanned: { type: Boolean, default: false },
-	createdAt: { type: Date, default: Date.now }
+    username: { // username: required, unique and at least 3 char long
+        type: String, required: true, unique: true,
+        validate: {
+            validator: function (v) {
+                return v.length >= 3;
+            },
+            message: props => 'Uporabniško ime mora biti dolgo vsaj 3 znake!!'
+        }
+    },
+    email: { // email: required, unique and must match regex
+        type: String, required: true, unique: true,
+        validate: {
+            validator: function (v) {
+                return /^[\w-.]+@([\w-]+\.)+\w+$/.test(v)
+            },
+            message: props => 'Email ni v veljavnem formatu. Če ste se zatipkali, prosimo poskusite znova vnesti veljaven email'
+
+        }
+    },
+    password: {
+        type: String, required: true, // password: required and must match regex
+        validate: {
+            validator: function (v) {
+                return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,30}$/.test(v);
+            },
+            message: props => 'Geslo mora biti dolgo med 8 in 30 znakov in vsebovati vsaj eno veliko črko in vsaj eno številko!!!'
+        }
+    },
+    // not included by registration
+    role: {type: String, enum: ['user', 'moderator', 'admin'], default: 'user'}, // user role - default is user
+    bio: {type: String, default: '',}, // bio - it should be used inside edit page
+    avatar: {type: String, default: ''}, // avatar - image/icon of user
+    isBanned: {type: Boolean, default: false}, // isBanned - if account is banned
+    createdAt: {type: Date, default: Date.now} // date of creation
 });
 
-
-UserSchema.statics.authenticate = function(username, password, callback){
-	User.findOne({ username: username})
-		.exec(function(err, user){
-			if(err){
-				return callback(err);
-			} else if(!user){
-				var err = new Error("User not found");
-				err.status = 401;
-				return callback(err);
-			}
-			bcrypt.compare(password, user.password, function(err, result){
-				if(result === true){
-					return callback(null, user);
-				} else{
-					return callback();
-				}
-			});
-		});
+/**
+ * LOGIN AUTHENTICATION
+ * @param username
+ * @param password
+ * @param callback
+ */
+UserSchema.statics.authenticate = function (username, password, callback) {
+    User.findOne({username: username}) // id user exists
+        .exec(function (err, user) {
+            if (err) {
+                return callback(err);
+            } else if (!user) {
+                var err = new Error("User not found");
+                err.status = 401;
+                return callback(err);
+            }
+            //compares provided passwords with the one inside DB
+            bcrypt.compare(password, user.password, function (err, result) {
+                if (result === true) {
+                    return callback(null, user);
+                } else {
+                    return callback();
+                }
+            });
+        });
 }
 
-UserSchema.pre('save', function(next) {
-	var user = this;
+/**
+ * FUNCTION THAT CALLS BEFORE CREATE USER
+ */
+UserSchema.pre('save', function (next) {
+    var user = this;
 
-	bcrypt.hash(user.password, SALT_WORK_FACTOR, function(err, hash) {
-		if (err) return next(err);
-		user.password = hash;
-		next();
-	});
+    // hashing password before saving new user
+    bcrypt.hash(user.password, SALT_WORK_FACTOR, function (err, hash) {
+        if (err) return next(new Error('Napaka strežnika - Težava pri shranjevanju gesla. Prosimo poskusite ponovno čez nekaj trenutkov'));
+        user.password = hash;
+        next();
+    });
 });
 
 module.exports = mongoose.model('users', UserSchema);
