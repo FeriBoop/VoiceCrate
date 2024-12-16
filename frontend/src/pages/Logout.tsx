@@ -1,36 +1,81 @@
-import { useEffect, useContext } from 'react';
+import React, {useEffect, useContext, useState} from 'react';
 import { UserContext, UserContextType } from '../userContext'; // Ensure UserContextType is defined
-import { Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import CustomModal from "../components/CustomModalProps";
 
+/**
+ * Logout function
+ * It logouts user
+ */
 const Logout: React.FC = () => {
   const userContext = useContext<UserContextType>(UserContext); // Ensure UserContext is properly typed
+  const navigate = useNavigate();
+  //for modal window
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [modalTitle, setModalTitle] = useState<string>(''); // Title for modal
+  const [modalMessage, setModalMessage] = useState<string>('');
+  const [backgroundColor, setBackgroundColor] = useState<string>('');
+  const [headerColor, setHeaderColor] = useState<string>('');
+  const [bodyColor, setBodyColor] = useState<string>('');
 
   useEffect(() => {
     const logout = async () => {
       try {
-        // Update the user context to null
-        userContext.setUserContext(null);
+        // Display modal window
+        setModalTitle('Odjava uspešna!');
+        setModalMessage('Vaša odjava je bila uspešna.');
+        setBackgroundColor('blue.200');
+        setHeaderColor('black');
+        setBodyColor('gray.800');
+        setIsModalOpen(true);
 
-        // Make the logout request
-        const res = await fetch('http://localhost:3001/users/logout', {
-          method: 'POST', // or GET, based on your backend implementation
+        setTimeout(() => {
+          userContext.setUserContext(null); // Clear user context
+          navigate('/login'); // Redirect to login page
+        }, 1500); // Adjust the timeout duration as needed
+
+        // Perform logout logic
+       /*const res = await fetch('http://localhost:3001/users/logout', {
+          method: 'POST',
           credentials: 'include',
         });
 
-        // Check if the response is okay
+
+
         if (!res.ok) {
-          throw new Error('Logout failed');
+          throw new Error('Odjava ni uspela.');
         }
-      } catch (error) {
-        console.error('Logout error:', error);
-        // You might want to show an error message to the user here
+
+        */
+      } catch (error) { // if error set error message
+        // Handle errors and show error modal
+        const errorMessage = error instanceof Error ? error.message : 'Napaka pri odjavi.';
+        setModalTitle('Napaka');
+        setModalMessage(errorMessage);
+        setBackgroundColor('red.200');
+        setHeaderColor('black');
+        setBodyColor('gray.800');
+        setIsModalOpen(true);
+
       }
     };
 
     logout();
-  }, [userContext]); // `userContext` is not expected to change, but you can keep it for safety
+  }, []); // `userContext` is not expected to change, but you can keep it for safety
 
-  return <Navigate replace to="/" />;
+  //return render
+  return(
+      <CustomModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          title={modalTitle}
+          message={modalMessage}
+          backgroundColor={backgroundColor}
+          headerColor={headerColor}
+          bodyColor={bodyColor}
+          duration={1500}
+      />
+  );
 };
 
 export default Logout;
