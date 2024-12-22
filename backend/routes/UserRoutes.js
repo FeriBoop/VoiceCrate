@@ -30,4 +30,9 @@ router.put('/:id', UserController.update);
  */
 router.delete('/:id', UserController.remove);
 
+/*
+ * PATCH 
+ */
+router.patch('/toggle-ban/:id', UserController.toggleBanStatus);
+
 module.exports = router;

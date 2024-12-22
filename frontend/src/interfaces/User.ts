@@ -6,4 +6,6 @@ export interface User {
   password: string;
   name: string;
   createdAt: string;
+  role: string; // Enum for roles
+  isBanned: boolean; // Indicates if the user is banned
 }

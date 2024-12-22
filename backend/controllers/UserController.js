@@ -101,6 +101,11 @@ module.exports = {
                     message: 'Wrong username or password',
                     error: new Error("Wrong username or password")
                 });
+            } else if (user.isBanned){
+                return res.status(401).json({
+                    message: 'This account has been banned!!!',
+                    error: new Error("This account has been banned!!!")
+                });
             } else {
                 // If password matches, create session
                 req.session.userId = user._id;
@@ -208,5 +213,35 @@ module.exports = {
 
             return res.status(204).json();
         });
-    }
+    },
+
+    /**
+     * Toggle the isBanned status of a user
+     */
+    toggleBanStatus: async function (req, res) {
+        try {
+            const userId = req.params.id;
+    
+            // Find the user and toggle the isBanned field directly
+            const user = await UserModel.findById(userId);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+    
+            const updatedUser = await UserModel.findByIdAndUpdate(
+                userId,
+                { isBanned: !user.isBanned },
+                { new: true, runValidators: false } // Disable validators during update
+            );
+    
+            return res.status(200).json({
+                message: `User ${updatedUser.isBanned ? 'banned' : 'unbanned'} successfully`,
+                user: updatedUser,
+            });
+        } catch (error) {
+            console.error('Error toggling ban status:', error);
+            return res.status(500).json({ message: 'Error toggling ban status' });
+        }
+    }    
+
 };
