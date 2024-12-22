@@ -108,23 +108,28 @@ const Posts: React.FC = () => {
                   Preberi več
                 </Button>
               </Link>
-              {user && post.userId && post.userId._id === user._id && (
-                <Box mt={4}>
-                  <Button
-                    colorScheme="green"
-                    mr={3}
-                    onClick={() => handleEditPost(post)} // Edit post
-                  >
-                    Uredi
-                  </Button>
-                  <Button
-                    colorScheme="red"
-                    onClick={() => handleDeletePost(post._id)} // Delete post
-                  >
-                    Izbriši
-                  </Button>
-                </Box>
-              )}
+              {user && (
+              <Box mt={4}>
+                {/* Allow admins to edit or delete any post, or the post's author to do so */}
+                {(user.role === 'admin' || (post.userId && post.userId._id === user._id)) && (
+                  <>
+                    <Button
+                      colorScheme="green"
+                      mr={3}
+                      onClick={() => handleEditPost(post)} // Edit post
+                    >
+                      Uredi
+                    </Button>
+                    <Button
+                      colorScheme="red"
+                      onClick={() => handleDeletePost(post._id)} // Delete post
+                    >
+                      Izbriši
+                    </Button>
+                  </>
+                )}
+              </Box>
+            )}
             </Box>
           ))}
         </Stack>
