@@ -7,6 +7,7 @@ import {
   Text,
   Spinner,
   useDisclosure,
+  Input,
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
 import AddPostModal from '../components/AddPostModal';
@@ -15,10 +16,22 @@ import { Link } from 'react-router-dom';
 
 const Posts: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null); // Track selected post for editing
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user } = useContext(UserContext);
+
+  // Filter states with initial values from localStorage
+  const [categoryFilter, setCategoryFilter] = useState(
+    localStorage.getItem('categoryFilter') || ''
+  );
+  const [authorFilter, setAuthorFilter] = useState(
+    localStorage.getItem('authorFilter') || ''
+  );
+  const [dateFilter, setDateFilter] = useState(
+    localStorage.getItem('dateFilter') || ''
+  );
 
   const loadPosts = () => {
     setLoading(true);
@@ -30,7 +43,9 @@ const Posts: React.FC = () => {
         return response.json();
       })
       .then((data) => {
-        setPosts(data.reverse());
+        const reversedPosts = data.reverse();
+        setPosts(reversedPosts);
+        setFilteredPosts(reversedPosts); // Set the initial filtered posts
         setLoading(false);
       })
       .catch((error) => {
@@ -43,14 +58,21 @@ const Posts: React.FC = () => {
     loadPosts();
   }, []);
 
+  useEffect(() => {
+    // Apply filters when posts are loaded
+    if (posts.length > 0) {
+      handleFilterChange();
+    }
+  }, [posts]);
+
   const handlePostAdded = () => {
     loadPosts();
-    setSelectedPost(null); // Reset selected post after adding
+    setSelectedPost(null);
   };
 
   const handleEditPost = (post: Post) => {
-    setSelectedPost(post); // Set the selected post for editing
-    onOpen(); // Open the modal
+    setSelectedPost(post);
+    onOpen();
   };
 
   const handleDeletePost = (id: string) => {
@@ -59,7 +81,7 @@ const Posts: React.FC = () => {
     })
       .then((response) => {
         if (response.ok) {
-          loadPosts(); // Reload posts after deletion
+          loadPosts();
         } else {
           console.error('Napaka pri brisanju objave');
         }
@@ -69,25 +91,69 @@ const Posts: React.FC = () => {
       });
   };
 
+  const handleFilterChange = () => {
+    const filtered = posts.filter((post) => {
+      const matchesCategory =
+        !categoryFilter || post.category.toLowerCase().includes(categoryFilter.toLowerCase());
+      const matchesAuthor =
+        !authorFilter || post.userId?.username?.toLowerCase().includes(authorFilter.toLowerCase());
+      const matchesDate =
+        !dateFilter || new Date(post.createdAt).toISOString().slice(0, 10) === dateFilter;
+      return matchesCategory && matchesAuthor && matchesDate;
+    });
+    setFilteredPosts(filtered);
+  };
+
+  // Save filters to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem('categoryFilter', categoryFilter);
+    localStorage.setItem('authorFilter', authorFilter);
+    localStorage.setItem('dateFilter', dateFilter);
+    handleFilterChange();
+  }, [categoryFilter, authorFilter, dateFilter]);
+
   return (
     <Box p={6} maxW="container.lg" mx="auto">
       <Heading as="h2" size="xl" mb={6} textAlign="center">
         Forum - Objave
       </Heading>
+
       {user && (
         <Button onClick={onOpen} colorScheme="blue" mb={6}>
           Dodaj novo objavo
         </Button>
       )}
+
+      {/* Filters */}
+      <Box mb={6}>
+        <Stack direction="row" spacing={4}>
+          <Input
+            placeholder="Kategorija"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          />
+          <Input
+            placeholder="Avtor"
+            value={authorFilter}
+            onChange={(e) => setAuthorFilter(e.target.value)}
+          />
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          />
+        </Stack>
+      </Box>
+
       {loading ? (
         <Spinner size="xl" />
-      ) : posts.length === 0 ? (
+      ) : filteredPosts.length === 0 ? (
         <Text fontSize="lg" color="gray.500" textAlign="center" mt={8}>
           Trenutno ni nobenih objav.
         </Text>
       ) : (
         <Stack spacing={6}>
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <Box
               key={post._id}
               p={5}
@@ -109,27 +175,26 @@ const Posts: React.FC = () => {
                 </Button>
               </Link>
               {user && (
-              <Box mt={4}>
-                {/* Allow admins to edit or delete any post, or the post's author to do so */}
-                {(user.role === 'admin' || (post.userId && post.userId._id === user._id)) && (
-                  <>
-                    <Button
-                      colorScheme="green"
-                      mr={3}
-                      onClick={() => handleEditPost(post)} // Edit post
-                    >
-                      Uredi
-                    </Button>
-                    <Button
-                      colorScheme="red"
-                      onClick={() => handleDeletePost(post._id)} // Delete post
-                    >
-                      Izbriši
-                    </Button>
-                  </>
-                )}
-              </Box>
-            )}
+                <Box mt={4}>
+                  {(user.role === 'admin' || (post.userId && post.userId._id === user._id)) && (
+                    <>
+                      <Button
+                        colorScheme="green"
+                        mr={3}
+                        onClick={() => handleEditPost(post)}
+                      >
+                        Uredi
+                      </Button>
+                      <Button
+                        colorScheme="red"
+                        onClick={() => handleDeletePost(post._id)}
+                      >
+                        Izbriši
+                      </Button>
+                    </>
+                  )}
+                </Box>
+              )}
             </Box>
           ))}
         </Stack>
@@ -138,10 +203,10 @@ const Posts: React.FC = () => {
         isOpen={isOpen}
         onClose={() => {
           onClose();
-          setSelectedPost(null); // Reset selected post when modal closes
+          setSelectedPost(null);
         }}
         onPostAdded={handlePostAdded}
-        post={selectedPost} // Pass selected post to the modal
+        post={selectedPost}
       />
     </Box>
   );
