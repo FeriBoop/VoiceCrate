@@ -8,4 +8,5 @@ export interface Post {
     _id: string;
     username: string;
   };
+  createdAt: Date;
 }

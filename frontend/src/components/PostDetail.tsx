@@ -20,11 +20,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
-
-interface User {
-  username: string;
-  _id: string;
-}
+import { User } from '../interfaces/User'
 
 interface Comment {
   _id: string;
@@ -202,7 +198,7 @@ const PostDetail: React.FC = () => {
                       {new Date(comment.createdAt).toLocaleString()}
                     </Text>
                     <Text>{comment.content}</Text>
-                    {user?._id === comment.userId._id && (
+                    {(user?._id === comment.userId._id || user?.role === 'admin') && (
                       <Button
                         colorScheme="red"
                         size="sm"
