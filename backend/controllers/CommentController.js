@@ -5,9 +5,10 @@ var mongoose = require('mongoose');
 
 module.exports = {
     list: function (req, res) {
-
-        CommentModel.find({postId: mongoose.Types.ObjectId(req.body.postId)})
-            .populate('user', 'displayName').exec(function (err, comments) {
+        let filter = {}
+        if(req.query.postId) filter.postId = req.query.postId;
+        CommentModel.find(filter)
+            .populate('userId', ['username', 'avatar']).exec(function (err, comments) {
             if (err) {
                 return res.status(500).json({
                     message: "Error fetching comments.",
