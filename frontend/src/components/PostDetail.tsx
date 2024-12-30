@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useContext, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, {useEffect, useState, useContext, useRef} from 'react';
+import {useParams, useNavigate} from 'react-router-dom';
 import {
   Box,
   Heading,
@@ -19,10 +19,11 @@ import {
   Textarea,
   useDisclosure,
 } from '@chakra-ui/react';
-import { UserContext } from '../userContext';
+import {UserContext} from '../userContext';
 
 interface User {
   username: string;
+  avatar: string;
   _id: string;
 }
 
@@ -30,7 +31,9 @@ interface Comment {
   _id: string;
   content: string;
   createdAt: string;
+  updatedAt: string;
   userId: User;
+  postId: string;
 }
 
 interface Post {
@@ -39,16 +42,16 @@ interface Post {
   category: string;
   createdAt: string;
   userId?: User;
-  comments?: Comment[];
 }
 
 const PostDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const {id} = useParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[] | null>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { user } = useContext(UserContext);
+  const {isOpen, onOpen, onClose} = useDisclosure();
+  const {user} = useContext(UserContext);
   const navigate = useNavigate();
 
   // Create ref for the textarea
@@ -71,6 +74,18 @@ const PostDetail: React.FC = () => {
         console.error('Error fetching post:', error);
         setLoading(false);
       });
+
+    fetch(`http://localhost:3000/comment?postId=${id}`).then(
+      (response) => {
+        if (!response.ok) {
+          throw new Error("Could not fetch comments")
+        }
+        return response.json();
+      }).then((data) => {
+      setComments(data);
+    }).catch((err) => {
+      console.error('Napaka pri pridobivanju komentarjev:', err);
+    })
   };
 
   useEffect(() => {
@@ -88,7 +103,7 @@ const PostDetail: React.FC = () => {
       return;
     }
 
-    fetch(`http://localhost:3000/post/${id}/comment`, {
+    fetch(`http://localhost:3000/comment`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -96,6 +111,7 @@ const PostDetail: React.FC = () => {
       body: JSON.stringify({
         content: newComment,
         userId: user._id,
+        postId: id
       }),
     })
       .then((response) => {
@@ -120,7 +136,7 @@ const PostDetail: React.FC = () => {
       return;
     }
 
-    fetch(`http://localhost:3000/post/${id}/comment/${commentId}`, {
+    fetch(`http://localhost:3000/comment/${commentId}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -154,13 +170,13 @@ const PostDetail: React.FC = () => {
         Back to Posts
       </Button>
       {loading ? (
-        <Spinner size="xl" />
+        <Spinner size="xl"/>
       ) : post ? (
         <>
           <Heading as="h2" size="xl" mb={4} textAlign="center" color="teal.600">
             {post.title}
           </Heading>
-          <Divider mb={4} />
+          <Divider mb={4}/>
           <Flex justify="space-between" color="gray.500" fontSize="sm" mb={6}>
             <Text>
               Category: <strong>{post.category}</strong>
@@ -176,7 +192,7 @@ const PostDetail: React.FC = () => {
           <Text fontSize="md" lineHeight="tall" mt={4} color="gray.700">
             {post.content}
           </Text>
-          <Divider my={6} />
+          <Divider my={6}/>
           <Heading as="h3" size="md" mb={4}>
             Comments
           </Heading>
@@ -185,13 +201,13 @@ const PostDetail: React.FC = () => {
             Add Comment
           </Button>
 
-          {post.comments && post.comments.length > 0 ? (
+          {comments && comments.length > 0 ? (
             <VStack spacing={4} align="start">
-              {post.comments
+              {comments
                 .sort(
                   (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
+                    new Date(b.updatedAt).getTime() -
+                    new Date(a.updatedAt).getTime()
                 )
                 .map((comment) => (
                   <Box
@@ -225,11 +241,15 @@ const PostDetail: React.FC = () => {
             </Text>
           )}
 
-          <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={textareaRef}>
-            <ModalOverlay />
+          <Modal
+            isOpen={isOpen}
+            onClose={onClose}
+            initialFocusRef={textareaRef}
+          >
+            <ModalOverlay/>
             <ModalContent>
-              <ModalHeader>Add Comment</ModalHeader>
-              <ModalCloseButton />
+              <ModalHeader>Dodaj komentar</ModalHeader>
+              <ModalCloseButton/>
               <ModalBody>
                 <Textarea
                   ref={textareaRef}
