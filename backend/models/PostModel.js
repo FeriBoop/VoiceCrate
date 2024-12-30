@@ -12,7 +12,7 @@ var PostSchema = new Schema({
   },
 
   score: { type: Number, required: true, default: 0 },
-  commentsNumber: { type: Number, required: true, default: 0 },
+  commentsCount: { type: Number, required: true, default: 0 },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
