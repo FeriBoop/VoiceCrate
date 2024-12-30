@@ -7,7 +7,13 @@ var CommentSchema = new Schema({
         type: Schema.Types.ObjectId, 
         ref: 'users', 
         required: true },
-    createdAt: { type: Date, default: Date.now }
+    postId: {
+        type: Schema.Types.ObjectId,
+        ref: 'posts',
+        required: true
+    },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('comments', CommentSchema);
