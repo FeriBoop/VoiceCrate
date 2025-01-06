@@ -4,8 +4,13 @@ export interface User {
   username: string;
   email: string;
   password: string;
-  name: string;
+  bio: string;
   createdAt: string;
+  avatar: {
+    imageName: string,
+    imageUrl: string,
+  };
+  name: string;
   role: string; // Enum for roles
   isBanned: boolean; // Indicates if the user is banned
 }

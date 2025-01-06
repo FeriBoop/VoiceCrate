@@ -3,13 +3,15 @@ const SALT_WORK_FACTOR = 10; // Define salt work factor
 
 var UserModel = require('../models/UserModel.js');
 const {json} = require("express");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 /**
  * UserController.js
  *
  * @description :: Server-side logic for managing Users.
  */
 module.exports = {
-
     /**
      * UserController.list()
      */
@@ -126,14 +128,6 @@ module.exports = {
                 error: new Error("Uporabniško ime ne obstaja")
             });
         }
-        // First, find the user by username
-        UserModel.findOne({ username: req.body.username }, function (error, user) {
-            if (error || !user) {
-                return res.status(401).json({
-                    message: 'Wrong username or password',
-                    error: new Error("Wrong username or password")
-                });
-            }
 
         // Compare the provided password with the hashed password
         bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
@@ -146,22 +140,6 @@ module.exports = {
                 // If password matches, create session
                 req.session.userId = user._id;
                 req.session.username = user.username;
-            // Compare the provided password with the hashed password
-            bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
-                if (err || !isMatch) {
-                    return res.status(401).json({
-                        message: 'Wrong username or password',
-                        error: new Error("Wrong username or password")
-                    });
-                } else if (user.isBanned){
-                    return res.status(401).json({
-                        message: 'Ta račun je bil blokiran!!! Obrnite se na skrbnika na naši strani za podporo.',
-                        error: new Error("This account has been banned!!!")
-                    });
-                } else {
-                    // If password matches, create session
-                    req.session.userId = user._id;
-                    req.session.username = user.username;
 
                     // Optionally, remove password from user object before sending response
                     user.password = undefined;
@@ -176,86 +154,84 @@ module.exports = {
      * UserController.update()
      */
     update: function (req, res) {
+        console.log("Route Parameters:", req.params);
+        console.log("Query Parameters:", req.query);
+        console.log("Request Body:", req.body);
+
         const id = req.params.id;
 
-        // Check if the user exists first
-        UserModel.findOne({ _id: id }, function (err, user) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting User',
-                    error: err
-                });
-            }
-    
-            if (!user) {
-                return res.status(404).json({
-                    message: 'No such User'
-                });
-            }
-    
-            // Prepare updates object
-            const updates = {};
+        // Prepare updates object from the request body
+        const updates = {};
 
-            if(req.body.email){
-                if (!/^[\w-.]+@([\w-]+\.)+\w+$/.test(req.body.email)) {
-                    return res.status(400).json({
-                        message: 'Email ni veljaven.'
+        if (req.body.username) updates.username = req.body.username;
+        if (req.body.email) {
+            if (!/^[\w-.]+@([\w-]+\.)+\w+$/.test(req.body.email)) {
+                return res.status(400).json({
+                    message: 'Email ni veljaven.',
+                });
+            }
+            updates.email = req.body.email;
+        }
+        if (req.body.bio) updates.bio = req.body.bio;
+
+        if (req.file) {
+            const avatarName = req.file.filename;
+            const avatarUrl = `/images/${avatarName}`;
+            updates.avatar = { imageName: avatarName, imageUrl: avatarUrl };
+        } else if (req.body.avatar === '') {
+            updates.avatar = { imageName: '', imageUrl: '' }; // Clear avatar if set to an empty string
+        }
+
+        // If password is provided, handle hashing and add it to updates
+        if (req.body.password) {
+            if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,30}$/.test(req.body.password)) {
+                return res.status(400).json({
+                    message: 'Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko.',
+                });
+            }
+
+            bcrypt.hash(req.body.password, SALT_WORK_FACTOR, function (err, hash) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Napaka strežnika pri shranjevanju gesla.',
+                        error: err,
                     });
                 }
-            }
 
+                updates.password = hash;
 
-            // Check if password needs to be updated
-            if (req.body.password) {
-                // Validate the new password against your rules
-                if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,30}$/.test(req.body.password)) {
-                    return res.status(400).json({
-                        message: 'Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko.'
-                    });
-                }
-    
-                // Hash the new password
-                bcrypt.hash(req.body.password, SALT_WORK_FACTOR, function(err, hash) {
-                    if (err) {
-                        return res.status(500).json({
-                            message: 'Napaka strežnika pri shranjevanju gesla.',
-                            error: err
-                        });
-                    }
-                    // Update password with the hashed value
-                    updates.password = hash;
-    
-                    // Now, update bio and avatar if provided
-                    updates.bio = req.body.bio || user.bio; // Retain existing bio if not provided
-                    updates.avatar = req.body.avatar || user.avatar; // Retain existing avatar if not provided
-    
-                    // Proceed to update user with hashed password
-                    UserModel.updateOne({ _id: id }, updates, { runValidators: false }, function (err, result) {
-                        if (err) {
-                            return res.status(500).json({
-                                message: 'Napaka pri posodobitvi uporabniških nastavitev.',
-                                error: err
-                            });
-                        }
-                        return res.json({ message: 'Uporabniške nastavitve uspešno posodobljene' });
-                    });
-                });
-            } else {
-                // If no password is being updated, only update bio and avatar
-                updates.bio = req.body.bio || user.bio; // Use existing bio if not provided
-                updates.avatar = req.body.avatar || user.avatar; // Use existing avatar if not provided
-    
-                UserModel.updateOne({ _id: id }, updates, { runValidators: true }, function (err, result) {
+                // Perform the update with the hashed password
+                performUpdate();
+            });
+        } else {
+            // Perform the update without password
+            performUpdate();
+        }
+
+        function performUpdate() {
+            UserModel.findOneAndUpdate(
+                { _id: id },
+                updates,
+                { new: true, useFindAndModify: false }, // Return updated document
+                function (err, updatedUser) {
                     if (err) {
                         return res.status(500).json({
                             message: 'Napaka pri posodobitvi uporabniških nastavitev.',
                             error: err
                         });
                     }
-                    return res.json({ message: 'Uporabniške nastavitve uspešno posodobljene' });
-                });
-            }
-        });
+
+                    if (!updatedUser) {
+                        return res.status(404).json({
+                            message: 'No such User',
+                        });
+                    }
+
+                    console.log("Updated User:", updatedUser);
+                    return res.json({ message: 'Uporabniške nastavitve uspešno posodobljene', user: updatedUser });
+                }
+            );
+        }
     },
 
     /**
@@ -304,5 +280,4 @@ module.exports = {
             return res.status(500).json({ message: 'Error toggling ban status' });
         }
     }
-
 };
