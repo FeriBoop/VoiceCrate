@@ -95,6 +95,8 @@ app.use('/user', usersRouter);
 app.use('/post', postsRouter);
 app.use('/vote', voteRouter);
 app.use('/comment', commentRouter)
+app.use('/images', express.static('public/images'));
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
