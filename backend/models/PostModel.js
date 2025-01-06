@@ -10,7 +10,13 @@ var PostSchema = new Schema({
     ref: 'users',
     required: true,
   },
-
+  images: [
+    {
+      dateCreated: Date,
+      imageName: String,
+      imageUrl: String,
+    }
+  ],
   score: { type: Number, required: true, default: 0 },
   commentsCount: { type: Number, required: true, default: 0 },
   createdAt: { type: Date, default: Date.now },

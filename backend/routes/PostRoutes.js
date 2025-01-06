@@ -1,6 +1,10 @@
-var express = require('express');
-var router = express.Router();
-var PostController = require('../controllers/PostController.js');
+const express = require('express');
+const { upload } = require('../controllers/PostController.js'); // Import only upload
+const PostController = require('../controllers/PostController.js'); // Import other methods
+
+
+const router = express.Router();
+
 
 function requiresLogin(req, res, next){
     if(req.session && req.session.userId){
@@ -16,9 +20,9 @@ router.get('/', PostController.list);
 
 router.get('/:id', PostController.show);
 
-router.post('/', PostController.create);
+router.post('/', PostController.upload.array('newImages', 10), PostController.create);
+router.put('/:id', PostController.upload.array('newImages', 10), PostController.update);
 
-router.put('/:id', PostController.update);
 
 router.delete('/:id', PostController.remove);
 
