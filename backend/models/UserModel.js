@@ -38,7 +38,10 @@ var UserSchema = new Schema({
     // not included by registration
     role: {type: String, enum: ['user', 'moderator', 'admin'], default: 'user'}, // user role - default is user
     bio: {type: String, default: '',}, // bio - it should be used inside edit page
-    avatar: {type: String, default: ''}, // avatar - image/icon of user
+    avatar: {
+        imageName: { type: String, default: '' }, // Name of the image file (e.g., 'avatar123.jpg')
+        imageUrl: { type: String, default: '' }   // URL to access the image (e.g., '/images/avatar123.jpg')
+    },
     isBanned: {type: Boolean, default: false}, // isBanned - if account is banned
     createdAt: {type: Date, default: Date.now} // date of creation
 });
