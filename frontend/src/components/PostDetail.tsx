@@ -20,6 +20,8 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
+import ImageSlideshow from "./ImageSlideShow";
+
 import VoteWidget from "./VoteWidget";
 import { User } from '../interfaces/User'
 
@@ -39,6 +41,12 @@ interface Post {
   category: string;
   createdAt: string;
   score: number;
+  images: [
+    {
+      imageName: string,
+      imageUrl: string,
+    }
+  ];
   userId?: User;
 }
 
@@ -183,6 +191,7 @@ const PostDetail: React.FC = () => {
               Datum: <b>{new Date(post.createdAt).toLocaleDateString()}</b>
             </Text>
           </Flex>
+          <ImageSlideshow images={post.images} />
           <Text color="gray.500" fontSize="sm" mb={4}>
             Avtor:{' '}
             <strong>{post.userId?.username || 'Unknown user'}</strong>

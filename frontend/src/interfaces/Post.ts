@@ -8,5 +8,11 @@ export interface Post {
     _id: string;
     username: string;
   };
+  images: [
+    {
+      imageName: string,
+      imageUrl: string,
+    }
+  ];
   createdAt: Date;
 }

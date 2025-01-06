@@ -195,12 +195,22 @@ const Posts: React.FC = () => {
               shadow="md"
               borderWidth="1px"
               borderRadius="lg"
+              textAlign={"center"}
               _hover={{ bg: 'gray.50' }}
             >
               <Heading fontSize="xl">{post.title}</Heading>
               <Text mt={2} fontSize="md" color="gray.600">
                 Kategorija: {post.category}
               </Text>
+              {post.images?.[0] && (
+                  <Box mb={8} mt={8} display="flex" justifyContent="center">
+                    <img
+                        src={`http://localhost:3000${post.images[0].imageUrl}`}
+                        alt={post.images[0].imageName || 'Post image'}
+                        style={{ width: '40%', height: '40%', borderRadius: '8px' }}
+                    />
+                  </Box>
+              )}
               <Text mt={2} fontSize="sm" color="gray.500">
                 Avtor: {post?.userId?.username || 'Neznan uporabnik'}
               </Text>
