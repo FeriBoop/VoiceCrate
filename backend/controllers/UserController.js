@@ -159,54 +159,79 @@ module.exports = {
         console.log("Request Body:", req.body);
 
         const id = req.params.id;
+        const { oldPassword, newPassword, username, email, bio, avatar } = req.body;
 
-        // Prepare updates object from the request body
         const updates = {};
 
-        if (req.body.username) updates.username = req.body.username;
-        if (req.body.email) {
-            if (!/^[\w-.]+@([\w-]+\.)+\w+$/.test(req.body.email)) {
-                return res.status(400).json({
-                    message: 'Email ni veljaven.',
-                });
-            }
-            updates.email = req.body.email;
-        }
-        if (req.body.bio) updates.bio = req.body.bio;
-
-        if (req.file) {
-            const avatarName = req.file.filename;
-            const avatarUrl = `/images/${avatarName}`;
-            updates.avatar = { imageName: avatarName, imageUrl: avatarUrl };
-        } else if (req.body.avatar === '') {
-            updates.avatar = { imageName: '', imageUrl: '' }; // Clear avatar if set to an empty string
-        }
-
-        // If password is provided, handle hashing and add it to updates
-        if (req.body.password) {
-            if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,30}$/.test(req.body.password)) {
-                return res.status(400).json({
-                    message: 'Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko.',
+        // Fetch the user to validate the old password
+        UserModel.findById(id, function (err, user) {
+            if (err || !user) {
+                return res.status(404).json({
+                    message: 'Neznan uporabnik.',
+                    error: err || 'Neznan uporabnik.',
                 });
             }
 
-            bcrypt.hash(req.body.password, SALT_WORK_FACTOR, function (err, hash) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Napaka strežnika pri shranjevanju gesla.',
-                        error: err,
-                    });
+            if (oldPassword) {
+                // Verify the old password
+                bcrypt.compare(oldPassword, user.password, function (err, isMatch) {
+                    if (err || !isMatch) {
+                        return res.status(401).json({
+                            message: 'Staro geslo je neveljavno.',
+                        });
+                    }
+
+                    // Old password is correct, allow updates for username, email, and new password
+                    if (username) updates.username = username;
+                    if (email) {
+                        if (!/^[\w-.]+@([\w-]+\.)+\w+$/.test(email)) {
+                            return res.status(400).json({
+                                message: 'Email ni veljaven.',
+                            });
+                        }
+                        updates.email = email;
+                    }
+
+                    if (newPassword) {
+                        if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,30}$/.test(newPassword)) {
+                            return res.status(400).json({
+                                message: 'Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko.',
+                            });
+                        }
+
+                        bcrypt.hash(newPassword, SALT_WORK_FACTOR, function (err, hash) {
+                            if (err) {
+                                return res.status(500).json({
+                                    message: 'Napaka strežnika pri shranjevanju gesla.',
+                                    error: err,
+                                });
+                            }
+
+                            updates.password = hash;
+
+                            // Perform the update with the hashed new password
+                            performUpdate();
+                        });
+                    } else {
+                        // Perform the update without new password
+                        performUpdate();
+                    }
+                });
+            } else {
+                // If oldPassword is not provided, only allow updates for bio and avatar
+                if (bio) updates.bio = bio;
+
+                if (req.file) {
+                    const avatarName = req.file.filename;
+                    const avatarUrl = `/images/${avatarName}`;
+                    updates.avatar = { imageName: avatarName, imageUrl: avatarUrl };
+                } else if (avatar === '') {
+                    updates.avatar = { imageName: '', imageUrl: '' }; // Clear avatar if set to an empty string
                 }
 
-                updates.password = hash;
-
-                // Perform the update with the hashed password
                 performUpdate();
-            });
-        } else {
-            // Perform the update without password
-            performUpdate();
-        }
+            }
+        });
 
         function performUpdate() {
             UserModel.findOneAndUpdate(
@@ -223,7 +248,7 @@ module.exports = {
 
                     if (!updatedUser) {
                         return res.status(404).json({
-                            message: 'No such User',
+                            message: 'Neznan uorabnik',
                         });
                     }
 

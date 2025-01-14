@@ -20,17 +20,28 @@ import {
   VStack,
   HStack,
   Image,
+    Textarea,
   CloseButton,
   Table,
   Tbody, Td, Tr, Th
 } from '@chakra-ui/react';
-import {UserContext} from '../userContext';
-import {useNavigate} from 'react-router-dom';
+import { UserContext } from '../userContext';
+import { useNavigate } from 'react-router-dom';
+import CustomModal from "../components/CustomModalProps";
 import axios from 'axios';
 import {User} from '../interfaces/User'
 
 const Profile: React.FC = () => {
-  const {user, setUserContext} = useContext(UserContext);
+    //modal window variables
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [modalTitle, setModalTitle] = useState<string>('');
+    const [modalMessage, setModalMessage] = useState<string>('');
+    const [backgroundColor, setBackgroundColor] = useState<string>('');
+    const [headerColor, setHeaderColor] = useState<string>('');
+    const [bodyColor, setBodyColor] = useState<string>('');
+
+
+    const { user, setUserContext } = useContext(UserContext);
   const navigate = useNavigate();
   const {isOpen, onOpen, onClose} = useDisclosure();
   const [username, setUsername] = useState('');
@@ -59,47 +70,45 @@ const Profile: React.FC = () => {
   }, [user]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(event.target.files || []);
+        const file = event.target.files?.[0];
     const validImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
     const maxFileSizeMB = 5;
 
-    if (selectedFiles.length > 1) {
-      toast({
-        title: 'Too many files',
-        description: 'You can only select up to 1 file!!',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return; // Exit early if more than 2 files are selected
-    }
+        if (!file) return;
 
-    for (const file of selectedFiles) {
-      if (file.size > maxFileSizeMB * 1024 * 1024) {
-        toast({
-          title: 'File too large',
-          description: `${file.name} exceeds the 5MB size limit.`,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        continue;
-      }
-      if (!validImageTypes.includes(file.type)) {
-        toast({
-          title: 'Invalid file type',
-          description: `${file.name} is not a supported image format.`,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        continue;
-      }
-      const timestamp = Date.now();
-      const newFileName = `${timestamp}-${file.name}`;
-      const newFile = new File([file], newFileName, {type: file.type});
-      setNewAvatar(newFile);
-    }
+        // Validate file size
+        if (file.size > maxFileSizeMB * 1024 * 1024) {
+            setModalTitle("Opozorilo");
+            setModalMessage("Slika je lahko maksimalno 5MB velika!");
+            setIsModalOpen(true);
+            setBackgroundColor("red.200");
+            setHeaderColor("blue.600");
+            setBodyColor("blue.600");
+
+            setTimeout(() => setIsModalOpen(false), 600);
+            return;
+        }
+
+        // Validate file type
+        if (!validImageTypes.includes(file.type)) {
+            setModalTitle("Opozorilo");
+            setModalMessage("Avatar je lahko samo v formatu .png, .jpg ali .gif");
+            setIsModalOpen(true);
+            setBackgroundColor("red.200");
+            setHeaderColor("blue.600");
+            setBodyColor("blue.600");
+
+            setTimeout(() => setIsModalOpen(false), 600);
+            return;
+        }
+
+        // Rename the file with a timestamp and set as new avatar
+        const timestamp = Date.now();
+        const newFileName = `${timestamp}-${file.name}`;
+        const newFile = new File([file], newFileName, { type: file.type });
+
+        setNewAvatar(newFile); // Replace the current avatar
+        setExistingAvatar(null); // Clear existing avatar
   };
 
   const handleRemoveAvatar = () => {
@@ -109,7 +118,19 @@ const Profile: React.FC = () => {
 
   const handleUpdate = () => {
     if (!username || !email) {
-      toast({title: 'Username and email are required', status: 'error'});
+      setModalTitle("Opozorilo");
+            setModalMessage("Uporabniško ime in email sta obvezna");
+            setIsModalOpen(true);
+            setBackgroundColor("red.200");
+            setHeaderColor("blue.600");
+            setBodyColor("blue.600");
+            setOldPassword('');
+            setNewPassword('');
+
+            setTimeout(() => {
+                setIsModalOpen(false);
+                return;
+            }, 600);
       return;
     }
 
@@ -125,8 +146,11 @@ const Profile: React.FC = () => {
       formData.append('avatar', '');
     }
 
-    if (oldPassword || newPassword) {
-      if (!oldPassword || !newPassword) {
+        if (oldPassword) {
+            formData.append('oldPassword', oldPassword);
+        }
+        if (newPassword) {
+            /*if (!oldPassword || !newPassword) {
         toast({
           title: 'Both old and new passwords are required to change the password.',
           status: 'error',
@@ -134,18 +158,22 @@ const Profile: React.FC = () => {
           isClosable: true,
         });
         return;
-      }
+            }*/
       if (!/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,30}$/.test(newPassword)) {
-        toast({
-          title: 'Invalid password',
-          description: 'New password must be 8-30 characters long and include at least one uppercase letter, one lowercase letter, and one digit.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
-        return;
+                setModalTitle("Ups");
+                setModalMessage("Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko!");
+                setIsModalOpen(true);
+                setBackgroundColor("red.200");
+                setHeaderColor("blue.600");
+                setBodyColor("blue.600");
+                setOldPassword('');
+                setNewPassword('');
+
+                setTimeout(() => {
+                    setIsModalOpen(false);
+                    return;
+                }, 600);
       }
-      formData.append('oldPassword', oldPassword);
       formData.append('newPassword', newPassword);
     }
 
@@ -155,38 +183,51 @@ const Profile: React.FC = () => {
     })
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}`);
+                    return response.json().then((error) => {
+                        throw new Error(error.message || "Napaka");
+                    });
         }
         return response.json();
       })
       .then((data) => {
-        // Access the user from the response data
         const updatedUser = data.user;
 
         if (updatedUser) {
-          toast({
-            title: 'Profile updated successfully',
-            status: 'success',
-            duration: 3000,
-            isClosable: true,
-          });
+                    setModalTitle("Profil je bil uspešno posodobljen!");
+                    setModalMessage(`Vaš profil je bil uspešno posodobljen.`);
+                    setBackgroundColor("green.200");
+                    setHeaderColor("blue.600");
+                    setBodyColor("blue.600");
+                    setIsModalOpen(true);
 
-          // Update the user context with the new user data
-          setUserContext(updatedUser);
-          onClose();
+                    setTimeout(() => {
+
+                        setIsModalOpen(false);
+                        setUserContext(updatedUser);
+                        onClose();
+
+                    }, 2000);
+
         } else {
-          throw new Error('No user data returned from the server');
+                    throw new Error(updatedUser.message);
         }
       })
       .catch((error) => {
         console.error('Error during profile update:', error);
-        toast({
-          title: 'Failed to update profile',
-          description: error.message,
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+                setModalTitle("Ups");
+                setModalMessage(error.message);
+                setIsModalOpen(true);
+                setBackgroundColor("red.200");
+                setHeaderColor("blue.600");
+                setBodyColor("blue.600");
+                setOldPassword('');
+                setNewPassword('');
+
+                setTimeout(() => {
+
+                    setIsModalOpen(false);
+
+                }, 600);
       });
   };
 
@@ -258,24 +299,40 @@ const Profile: React.FC = () => {
       <Stack spacing={4} mb={8}>
         <Box>
           <Text fontSize="lg" fontWeight="bold">
-            Ime:
+                        Avatar:
           </Text>
-          <Text fontSize="md">{user.username}</Text>
+                    <Image
+                        src={
+                            user.avatar?.imageUrl
+                                ? 'http://localhost:3000' + user.avatar.imageUrl
+                                : '/images/avatar_placeholder.png'
+                        }
+                        alt={user.avatar?.imageName || "Placeholder Avatar"}
+                        boxSize="100px"
+                        objectFit="cover"
+                        borderRadius="md"
+                    />
         </Box>
         <Box>
           <Text fontSize="lg" fontWeight="bold">
-            E-pošta:
+                        Uporabniško ime:
           </Text>
-          <Text fontSize="md">{user.email}</Text>
+                    <Text fontSize="md">{user.username}</Text>
         </Box>
         <Box>
           <Text fontSize="lg" fontWeight="bold">
-            Datum registracije:
+                        Opis:
           </Text>
           <Text fontSize="md">
-            {new Date(user.createdAt).toLocaleDateString()}
+                        {user.bio}
           </Text>
         </Box>
+                <Box>
+                    <Text fontSize="lg" fontWeight="bold">
+                        E-naslov:
+                    </Text>
+                    <Text fontSize="md">{user.email}</Text>
+                </Box>
       </Stack>
 
       {user.role === 'admin' && (
@@ -322,44 +379,27 @@ const Profile: React.FC = () => {
           <ModalHeader>Uredi profil</ModalHeader>
           <ModalCloseButton/>
           <ModalBody>
-            <FormControl mb={4}>
-              <FormLabel>Uporabniško ime</FormLabel>
-              <Input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-            </FormControl>
-            <FormControl mb={4}>
-              <FormLabel>E-pošta</FormLabel>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)}/>
-            </FormControl>
+            <FormLabel mb={2}>Nastavitve, ki jih lahko spreminjate brez gesla: </FormLabel>
             <FormControl mb={4}>
               <FormLabel>Opis</FormLabel>
-              <Input value={bio} onChange={(e) => setBio(e.target.value)}/>
+              <Textarea value={bio} onChange={(e) => setBio(e.target.value)}/>
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Avatar</FormLabel>
-              {existingAvatar && (
+                            {(existingAvatar || newAvatar) && (
                 <HStack>
                   <Image
-                    src={'http://localhost:3000' + existingAvatar.imageUrl}
-                    alt={existingAvatar.imageName}
+                                        src={
+                                            newAvatar
+                                                ? URL.createObjectURL(newAvatar)
+                                                : 'http://localhost:3000' + existingAvatar!.imageUrl
+                                        }
+                                        alt={newAvatar ? newAvatar.name : existingAvatar!.imageName}
                     boxSize="50px"
+                                        objectFit="cover"
                     borderRadius="md"
                   />
                   <CloseButton onClick={handleRemoveAvatar}/>
-                </HStack>
-              )}
-              {newAvatar && (
-                <HStack>
-                  <Image
-                    src={URL.createObjectURL(newAvatar)}
-                    alt={newAvatar.name}
-                    boxSize="50px"
-                    objectFit="cover"
-                    borderRadius="md"
-                  />
-                  <CloseButton onClick={() => setNewAvatar(null)}/>
                 </HStack>
               )}
               <Input
@@ -369,6 +409,24 @@ const Profile: React.FC = () => {
                 onChange={handleFileChange}
               />
             </FormControl>
+
+                        <hr/>
+                        <FormLabel mt={5} mb={4}>Nastavitve, za katere potrebujete vnesiti svoje trenutno
+                            geslo: </FormLabel>
+
+
+                        <FormControl mb={4}>
+                            <FormLabel>Uporabniško ime</FormLabel>
+                            <Input
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </FormControl>
+                        <FormControl mb={4}>
+                            <FormLabel>E-pošta</FormLabel>
+                            <Input value={email} onChange={(e) => setEmail(e.target.value)}/>
+                        </FormControl>
+
             <FormControl mb={4}>
               <FormLabel>Trenutno geslo</FormLabel>
               <Input
@@ -377,8 +435,11 @@ const Profile: React.FC = () => {
                 onChange={(e) => setOldPassword(e.target.value)}
               />
             </FormControl>
+                        <hr/>
+                        <FormLabel mt={5} mb={4}>Spodaj lahko spremenite svoje geslo (če ga ne želite, samo pustite prazno)</FormLabel>
+
             <FormControl mb={4}>
-              <FormLabel>Nova geslo</FormLabel>
+                            <FormLabel>Novo geslo</FormLabel>
               <Input
                 type="password"
                 value={newPassword}
@@ -394,6 +455,17 @@ const Profile: React.FC = () => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+            <CustomModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={modalTitle}
+                message={modalMessage}
+                backgroundColor={backgroundColor}
+                headerColor={headerColor}
+                bodyColor={bodyColor}
+                duration={1500}
+            />
     </Box>
   );
 };
