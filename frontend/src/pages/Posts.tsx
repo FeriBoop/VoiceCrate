@@ -8,11 +8,14 @@ import {
   Spinner,
   useDisclosure,
   Input,
+  HStack,
+  IconButton,
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
 import AddPostModal from '../components/AddPostModal';
 import { Post } from '../interfaces/Post';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';  // Add useNavigate
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 
 const Posts: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -21,6 +24,12 @@ const Posts: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user } = useContext(UserContext);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPosts, setTotalPosts] = useState(0); // To store total number of posts
+
+  const postsPerPage = 10;
+  const navigate = useNavigate(); // Initialize useNavigate
+  const location = useLocation();
 
   // Filter states with initial values from localStorage
   const [categoryFilter, setCategoryFilter] = useState(
@@ -33,9 +42,9 @@ const Posts: React.FC = () => {
     localStorage.getItem('dateFilter') || ''
   );
 
-  const loadPosts = () => {
+  const loadPosts = (page: number) => {
     setLoading(true);
-    fetch('http://localhost:3000/post')
+    fetch(`http://localhost:3000/post?page=${page}&limit=${postsPerPage}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -45,8 +54,10 @@ const Posts: React.FC = () => {
       .then((data) => {
         const reversedPosts = data.reverse();
         setPosts(reversedPosts);
+        setTotalPosts(data.totalPosts);
         setFilteredPosts(reversedPosts); // Set the initial filtered posts
         setLoading(false);
+        localStorage.setItem('lastPage', page.toString()); // Save current page to localStorage
       })
       .catch((error) => {
         console.error('Napaka pri pridobivanju objav:', error);
@@ -55,8 +66,15 @@ const Posts: React.FC = () => {
   };
 
   useEffect(() => {
-    loadPosts();
+    const savedPage = localStorage.getItem('lastPage');
+    const initialPage = savedPage ? parseInt(savedPage) : 1;
+    setCurrentPage(initialPage);
+    loadPosts(initialPage);
   }, []);
+
+  useEffect(() => {
+    loadPosts(currentPage);
+  }, [currentPage]);
 
   useEffect(() => {
     // Apply filters when posts are loaded
@@ -66,7 +84,7 @@ const Posts: React.FC = () => {
   }, [posts]);
 
   const handlePostAdded = () => {
-    loadPosts();
+    loadPosts(currentPage);
     setSelectedPost(null);
   };
 
@@ -81,7 +99,7 @@ const Posts: React.FC = () => {
     })
       .then((response) => {
         if (response.ok) {
-          loadPosts();
+          loadPosts(currentPage);
         } else {
           console.error('Napaka pri brisanju objave');
         }
@@ -90,6 +108,20 @@ const Posts: React.FC = () => {
         console.error('Napaka pri brisanju objave:', error);
       });
   };
+
+  const handleNextPage = () => {
+    if (currentPage * postsPerPage < totalPosts) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
 
   const handleFilterChange = () => {
     const filtered = posts.filter((post) => {
@@ -169,7 +201,7 @@ const Posts: React.FC = () => {
               <Text mt={2} fontSize="sm" color="gray.500">
                 Avtor: {post?.userId?.username || 'Neznan uporabnik'}
               </Text>
-              <Link to={`/posts/${post._id}`}>
+              <Link to={`/posts/${post._id}`} state={{ fromPage: currentPage }}>
                 <Button colorScheme="teal" mt={4}>
                   Preberi več
                 </Button>
@@ -199,6 +231,23 @@ const Posts: React.FC = () => {
           ))}
         </Stack>
       )}
+      <HStack justify="space-between" mt={6}>
+        <IconButton
+          icon={<ChevronLeftIcon />}
+          onClick={handlePreviousPage}
+          isDisabled={currentPage === 1}
+          aria-label="Previous Page"
+        />
+        <Text>
+          Page {currentPage} of {totalPages}
+        </Text>
+        <IconButton
+          icon={<ChevronRightIcon />}
+          onClick={handleNextPage}
+          isDisabled={currentPage === totalPages}
+          aria-label="Next Page"
+        />
+      </HStack>
       <AddPostModal
         isOpen={isOpen}
         onClose={() => {
