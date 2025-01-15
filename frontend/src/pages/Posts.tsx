@@ -52,7 +52,8 @@ const Posts: React.FC = () => {
         return response.json();
       })
       .then((data) => {
-        const reversedPosts = data.reverse();
+        console.log("Fetched data:", data);
+        const reversedPosts = data.posts.reverse();
         setPosts(reversedPosts);
         setTotalPosts(data.totalPosts);
         setFilteredPosts(reversedPosts); // Set the initial filtered posts
