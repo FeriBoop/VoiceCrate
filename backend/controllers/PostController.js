@@ -10,18 +10,37 @@ var CommentModel = require('../models/CommentModel');
 
 module.exports = {
   list: function (req, res) {
+    const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10 if not provided
+    const skip = (page - 1) * limit; // Calculate skip based on page and limit
+  
     PostModel.find()
-      .populate('userId', 'username') // Dodano za pridobitev username polja iz User modela
-      .exec(function (err, Posts) {
+      .skip(skip) // Skip posts for the previous pages
+      .limit(Number(limit)) // Limit the number of posts per page
+      .populate('userId', 'username') // Populate username from User model
+      .exec(function (err, posts) {
         if (err) {
           return res.status(500).json({
-            message: 'Error when getting Post.',
+            message: 'Error when getting posts.',
             error: err,
           });
         }
-        return res.json(Posts);
+  
+        // Get the total count of posts for pagination calculation
+        PostModel.countDocuments().exec(function (err, count) {
+          if (err) {
+            return res.status(500).json({
+              message: 'Error when counting posts.',
+              error: err,
+            });
+          }
+  
+          return res.json({
+            posts, // Return the posts for the current page
+            totalPosts: count, // Return the total number of posts for pagination
+          });
+        });
       });
-  },
+  },  
 
   // Posodobljena metoda za prikaz posamezne objave
   show: function (req, res) {
