@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { Box, Heading, Text, Button, Stack, Table, Tbody, Tr, Th, Td } from '@chakra-ui/react';
+import { Box, Heading, Text, Button, Stack, Table, Tbody, Tr, Th, Td, Input } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -9,12 +9,17 @@ const Profile: React.FC = () => {
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
   useEffect(() => {
     if (user?.role === 'admin') {
       // Fetch all users if the logged-in user is an admin
-      axios.get<User[]>('http://localhost:3000/user').then((response) => {
+      axios
+        .get<User[]>('http://localhost:3000/user')
+        .then((response) => {
           setAllUsers(response.data);
+          setFilteredUsers(response.data); // Initialize filtered users
         })
         .catch((error) => {
           console.error('Error fetching users:', error);
@@ -23,8 +28,16 @@ const Profile: React.FC = () => {
   }, [user]);
 
   const toggleBanStatus = (userId: string) => {
-    axios.patch(`http://localhost:3000/user/toggle-ban/${userId}`).then(() => {
+    axios
+      .patch(`http://localhost:3000/user/toggle-ban/${userId}`)
+      .then(() => {
         setAllUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u._id === userId ? { ...u, isBanned: !u.isBanned } : u
+          )
+        );
+        // Update filtered users
+        setFilteredUsers((prevUsers) =>
           prevUsers.map((u) =>
             u._id === userId ? { ...u, isBanned: !u.isBanned } : u
           )
@@ -33,6 +46,16 @@ const Profile: React.FC = () => {
       .catch((error) => {
         console.error('Error toggling ban status:', error);
       });
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setFilteredUsers(
+      allUsers.filter((user) =>
+        user.username.includes(value)
+      )
+    );
   };
 
   if (!user) {
@@ -76,27 +99,32 @@ const Profile: React.FC = () => {
           </Text>
         </Box>
       </Stack>
-      
 
       {user.role === 'admin' && (
         <>
           <Heading as="h3" size="lg" mb={4}>
             Seznam uporabnikov
           </Heading>
+          <Input
+            placeholder="Iskanje po uporabniškem imenu"
+            value={searchTerm}
+            onChange={handleSearch}
+            mb={4}
+          />
           <Table variant="simple" size="sm">
             <Tbody>
-              {allUsers.map((u) => (
+              {filteredUsers.map((u) => (
                 <Tr key={u._id}>
                   <Td>{u.username}</Td>
                   <Td>{u.email}</Td>
-                  <Td>{u.isBanned ? 'Banned' : 'Active'}</Td>
+                  <Td>{u.isBanned ? 'Prepovedano' : 'Aktivno'}</Td>
                   <Td>
                     <Button
                       size="sm"
                       colorScheme={u.isBanned ? 'green' : 'red'}
                       onClick={() => toggleBanStatus(u._id)}
                     >
-                      {u.isBanned ? 'Unban' : 'Ban'}
+                      {u.isBanned ? 'Aktiviraj' : 'Prepovej'}
                     </Button>
                   </Td>
                 </Tr>

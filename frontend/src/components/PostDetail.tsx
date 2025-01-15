@@ -147,7 +147,7 @@ const PostDetail: React.FC = () => {
         const page = lastPage ? parseInt(lastPage) : 1; // Default to page 1 if no page is saved
         navigate(`/posts?page=${page}`);
       }} colorScheme="teal" mb={6}>
-        Back to Posts
+        Nazaj na objave
       </Button>
       {loading ? (
         <Spinner size="xl" />
@@ -159,14 +159,14 @@ const PostDetail: React.FC = () => {
           <Divider mb={4} />
           <Flex justify="space-between" color="gray.500" fontSize="sm" mb={6}>
             <Text>
-              Category: <strong>{post.category}</strong>
+              Kategorija: <strong>{post.category}</strong>
             </Text>
             <Text>
-              Date: <b>{new Date(post.createdAt).toLocaleDateString()}</b>
+              Datum: <b>{new Date(post.createdAt).toLocaleDateString()}</b>
             </Text>
           </Flex>
           <Text color="gray.500" fontSize="sm" mb={4}>
-            Author:{' '}
+            Avtor:{' '}
             <strong>{post.userId?.username || 'Unknown user'}</strong>
           </Text>
           <Text fontSize="md" lineHeight="tall" mt={4} color="gray.700">
@@ -174,11 +174,11 @@ const PostDetail: React.FC = () => {
           </Text>
           <Divider my={6} />
           <Heading as="h3" size="md" mb={4}>
-            Comments
+            Komentarji
           </Heading>
 
           <Button colorScheme="teal" mb={4} onClick={onOpen}>
-            Add Comment
+            Dodaj komentar
           </Button>
 
           {post.comments && post.comments.length > 0 ? (
@@ -217,14 +217,14 @@ const PostDetail: React.FC = () => {
             </VStack>
           ) : (
             <Text color="gray.500">
-              No comments yet. Be the first to comment!
+              Ni še komentarjev bodi prvi ki boš komentiral!
             </Text>
           )}
 
           <Modal isOpen={isOpen} onClose={onClose} initialFocusRef={textareaRef}>
             <ModalOverlay />
             <ModalContent>
-              <ModalHeader>Add Comment</ModalHeader>
+              <ModalHeader>Dodaj komentar</ModalHeader>
               <ModalCloseButton />
               <ModalBody>
                 <Textarea
@@ -236,10 +236,10 @@ const PostDetail: React.FC = () => {
               </ModalBody>
               <ModalFooter>
                 <Button colorScheme="teal" onClick={handleCommentSubmit}>
-                  Submit
+                  Dodaj
                 </Button>
                 <Button onClick={onClose} ml={3}>
-                  Cancel
+                  Prekliči
                 </Button>
               </ModalFooter>
             </ModalContent>

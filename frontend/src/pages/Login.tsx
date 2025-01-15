@@ -38,25 +38,41 @@ const Login: React.FC = () => {
         body: JSON.stringify({ username, password }),
       });
 
+      /*
       if (!res.ok) {
         throw new Error('Network response was not ok');
       }
-
-      const data = await res.json();
-
-      if (data && data._id) {
-        userContext.setUserContext(data);
+      */
+      console.log(res.status);
+      if(res.status === 401){
+        const errorData = await res.json();
+        setError('Vaš račun je blokiran!!!');
         toast({
-          title: 'Prijava uspešna',
-          description: `Dobrodošli, ${username}!`,
-          status: 'success',
+          title: 'Dostop zavrnjen',
+          description: errorData.message,
+          status: 'error',
           duration: 3000,
           isClosable: true,
         });
-      } else {
-        setError('Nepravilno uporabniško ime ali geslo');
-        setUsername('');
-        setPassword('');
+        return;
+      }
+      else{
+        const data = await res.json();
+
+        if (data && data._id) {
+          userContext.setUserContext(data);
+          toast({
+            title: 'Prijava uspešna',
+            description: `Dobrodošli, ${username}!`,
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+          });
+        } else {
+          setError('Nepravilno uporabniško ime ali geslo');
+          setUsername('');
+          setPassword('');
+        }
       }
     } catch (error) {
       console.error(error);
