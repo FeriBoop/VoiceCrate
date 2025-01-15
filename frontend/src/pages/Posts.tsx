@@ -159,6 +159,7 @@ const Posts: React.FC = () => {
 
       {/* Filters */}
       <Box mb={6}>
+        <Heading fontSize="xl">Filtri:</Heading>
         <Stack direction="row" spacing={4}>
           <Input
             placeholder="Kategorija"

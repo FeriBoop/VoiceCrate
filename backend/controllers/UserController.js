@@ -85,39 +85,39 @@ module.exports = {
     },
 
     login: function (req, res, next) {
-    // First, find the user by username
-    UserModel.findOne({ username: req.body.username }, function (error, user) {
-        if (error || !user) {
-            return res.status(401).json({
-                message: 'Wrong username or password',
-                error: new Error("Wrong username or password")
-            });
-        }
-
-        // Compare the provided password with the hashed password
-        bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
-            if (err || !isMatch) {
+        // First, find the user by username
+        UserModel.findOne({ username: req.body.username }, function (error, user) {
+            if (error || !user) {
                 return res.status(401).json({
                     message: 'Wrong username or password',
                     error: new Error("Wrong username or password")
                 });
-            } else if (user.isBanned){
-                return res.status(401).json({
-                    message: 'This account has been banned!!!',
-                    error: new Error("This account has been banned!!!")
-                });
-            } else {
-                // If password matches, create session
-                req.session.userId = user._id;
-                req.session.username = user.username;
-
-                // Optionally, remove password from user object before sending response
-                user.password = undefined;
-
-                return res.json(user);
             }
+
+            // Compare the provided password with the hashed password
+            bcrypt.compare(req.body.password, user.password, function (err, isMatch) {
+                if (err || !isMatch) {
+                    return res.status(401).json({
+                        message: 'Wrong username or password',
+                        error: new Error("Wrong username or password")
+                    });
+                } else if (user.isBanned){
+                    return res.status(401).json({
+                        message: 'Ta račun je bil blokiran!!! Obrnite se na skrbnika na naši strani za podporo.',
+                        error: new Error("This account has been banned!!!")
+                    });
+                } else {
+                    // If password matches, create session
+                    req.session.userId = user._id;
+                    req.session.username = user.username;
+
+                    // Optionally, remove password from user object before sending response
+                    user.password = undefined;
+
+                    return res.json(user);
+                }
+            });
         });
-    });
     },
 
     /**
