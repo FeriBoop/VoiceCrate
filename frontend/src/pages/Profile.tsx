@@ -411,7 +411,7 @@ const Profile: React.FC = () => {
             </FormControl>
 
                         <hr/>
-                        <FormLabel mt={5} mb={4}>Nastavitve, za katere potrebujete vnesiti svoje trenutno
+                        <FormLabel mt={5} mb={4}>Nastavitve, za katere potrebujete vnesti svoje trenutno
                             geslo: </FormLabel>
 
 
