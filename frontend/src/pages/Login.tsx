@@ -81,6 +81,11 @@ const Login: React.FC = () => {
           setBodyColor("blue.600");
           setUsername('');
           setPassword('');
+          if(res.status === 401){
+            setModalMessage(data.message);
+            setError('Vaš račun je blokiran!!!');
+            return;
+          }
         }
 
 
