@@ -6,3 +6,5 @@
 .env
 # Iz repozitorija izključimo dbdata ki vsebuje podatke za povezavo na podatkovno bazo.
 /dbdata
+public/images
+package-lock.json
