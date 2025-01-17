@@ -136,6 +136,11 @@ module.exports = {
                     message: 'Uporabniško ime ali geslo je napačno',
                     error: new Error("Uporabniško ime ali geslo je napačno")
                 });
+            } else if (user.isBanned){
+                return res.status(401).json({
+                    message: 'Ta račun je bil blokiran!!! Obrnite se na skrbnika na naši strani za podporo.',
+                    error: new Error("This account has been banned!!!")
+                }); 
             } else {
                 // If password matches, create session
                 req.session.userId = user._id;
