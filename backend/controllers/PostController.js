@@ -103,6 +103,7 @@ module.exports = {
     // Posodobljena metoda za prikaz posamezne objave
     show: function (req, res) {
         var id = req.params.id;
+        var scoreOnly = !!req.query.scoreOnly && req.query.scoreOnly === "true";
 
         PostModel.findOne({_id: id})
             .populate('userId', 'username') // Populacija za prikaz avtorja
@@ -123,8 +124,10 @@ module.exports = {
                         message: 'No such Post',
                     });
                 }
-
-                return res.json(post);
+                if(scoreOnly){
+                    return res.status(200).json({score: post.score})
+                }
+                else return res.json(post);
             });
     },
 

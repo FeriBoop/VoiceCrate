@@ -20,6 +20,7 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
+import VoteWidget from "./VoteWidget";
 import { User } from '../interfaces/User'
 
 interface Comment {
@@ -32,10 +33,12 @@ interface Comment {
 }
 
 interface Post {
+  _id: string;
   title: string;
   content: string;
   category: string;
   createdAt: string;
+  score: number;
   userId?: User;
 }
 
@@ -187,6 +190,7 @@ const PostDetail: React.FC = () => {
           <Text fontSize="md" lineHeight="tall" mt={4} color="gray.700">
             {post.content}
           </Text>
+          <VoteWidget postId={post._id}/>
           <Divider my={6}/>
           <Heading as="h3" size="md" mb={4}>
             Komentarji
