@@ -1,11 +1,10 @@
 import React, {useState, useEffect, useContext, useRef} from 'react';
-import {Button, Box, Text} from '@chakra-ui/react'
+import {IconButton, Box, Text} from '@chakra-ui/react'
 import {ArrowUpIcon, ArrowDownIcon} from "@chakra-ui/icons";
+import {UserContext} from "../userContext";
 
 interface VoteWidgetProps {
   postId: string;
-  userId?: string;
-  score: number;
   onVote?: () => void;
 }
 
@@ -22,44 +21,59 @@ interface Vote {
   type: VoteType;
 }
 
+interface VoteResult {
+  newScore: number,
+  vote: Vote
+}
+
 const magnitudes = ['', 'k', 'M', 'G', 'T']
 
 const VoteWidget: React.FC<VoteWidgetProps> = ({
                                                  postId,
-                                                 userId,
-                                                 score,
                                                  onVote,
                                                }) => {
+  const [score, setScore] = useState(0);
   const [scoreText, setScoreText] = useState('0');
   const [vote, setVote] = useState<Vote | null>(null);
+  const {user} = useContext(UserContext)
 
   // REST
   const handleRestError = (err: Error) => {
     console.warn(err);
   }
 
+  const fetchPostScore = () => {
+    fetch(`http://localhost:3000/post/${postId}?scoreOnly=true`).then((response) => {
+      if (!response.ok) throw new Error('Could not fetch post score');
+
+      return response.json();
+    }).then((data) => {
+      setScore(data.score);
+    }).catch(handleRestError);
+  }
+
   const fetchVoteState = () => {
-    if (!postId || !userId) {
+    if (!postId || !user) {
       console.log("Cannot fetch vote state: user or post ID not set");
       return;
     }
 
-    fetch(`http://localhost:3000/vote?postId=${postId}&userId=${userId}`).then(
+    fetch(`http://localhost:3000/vote?postId=${postId}&userId=${user._id}`).then(
       (response) => {
         if (!response.ok) throw new Error("Could not fetch vote state");
 
         return response.json();
       }
     ).then((data) => {
-      console.log("Vote fetched:")
-      console.log(data)
       if (!data || data.length !== 1) setVote(null);
-      else setVote(data[0]);
+      else {
+        setVote(data[0]);
+      }
     }).catch(handleRestError)
   }
 
   const postVote = (type: VoteType) => {
-    if (!postId || !userId) {
+    if (!postId || !user) {
       console.log("Cannot post vote: user or post ID not set");
       return;
     }
@@ -73,18 +87,21 @@ const VoteWidget: React.FC<VoteWidgetProps> = ({
       },
       body: JSON.stringify({
         postId: postId,
-        userId: userId,
+        userId: user._id,
         type: type
       })
     }).then((response) => {
       if (!response.ok) throw new Error("Could not post vote");
-      if(onVote) onVote();
+      if (onVote) onVote();
       return response.json();
-    }).then(setVote).catch(handleRestError)
+    }).then((data) => {
+      setVote(data.vote);
+      setScore(data.newScore)
+    }).catch(handleRestError)
   }
 
   const putVote = (type: VoteType) => {
-    if (!postId || !userId) {
+    if (!postId || !user) {
       console.log("Cannot post vote: user or post ID not set");
       return;
     }
@@ -99,13 +116,16 @@ const VoteWidget: React.FC<VoteWidgetProps> = ({
       body: JSON.stringify({type: type})
     }).then((response) => {
       if (!response.ok) throw new Error("Could not update vote")
-      if(onVote) onVote();
+      if (onVote) onVote();
       return response.json();
-    }).then(setVote).catch(handleRestError);
+    }).then((data) => {
+      setVote(data.vote);
+      setScore(data.newScore)
+    }).catch(handleRestError);
   }
 
   const deleteVote = () => {
-    if (!postId || !userId) {
+    if (!postId || !user) {
       console.log("Cannot post vote: user or post ID not set");
       return;
     }
@@ -118,13 +138,18 @@ const VoteWidget: React.FC<VoteWidgetProps> = ({
       }
     }).then((response) => {
       if (!response.ok) throw new Error("Could not delete vote");
+      setScore(score - vote.type)
       setVote(null);
-      if(onVote) onVote();
+      if (onVote) onVote();
+      return response.json();
+    }).then((data) => {
+      setVote(data.vote);
+      setScore(data.newScore)
     }).catch(handleRestError);
   }
 
   const castVote = (type: VoteType) => {
-    if (!postId || !userId) {
+    if (!postId || !user) {
       console.log("Cannot post vote: user or post ID not set");
       return;
     }
@@ -147,14 +172,18 @@ const VoteWidget: React.FC<VoteWidgetProps> = ({
         continue;
       }
 
-      setScoreText(sign + (absScore / mag).toLocaleString(["en-US", "si-SL"], {maximumFractionDigits: 2}) + " " + pref);
+      let num = absScore / mag;
+      let sigDigits = absScore !== 0 ? Math.ceil(Math.log10(num)) : 1;
+
+      setScoreText(sign + num.toLocaleString(["en-US", "si-SL"], {maximumFractionDigits: 3 - sigDigits}) + " " + pref);
       break;
     }
   }, [score])
 
   useEffect(() => {
     fetchVoteState();
-  }, [userId, postId])
+    fetchPostScore();
+  }, [user, postId])
 
   // update vote state
 
@@ -167,23 +196,26 @@ const VoteWidget: React.FC<VoteWidgetProps> = ({
 
   return (
     <Box>
-      <Button onClick={handleUpvotePress}
-              disabled={!userId}
-              aria-label="Upvote"
-              colorScheme={!!vote && vote.type === VoteType.UpVote ? 'blue' : undefined}
+      <IconButton onClick={handleUpvotePress}
+                  disabled={!user}
+                  aria-label="Upvote"
+                  colorScheme={!!vote && vote.type === VoteType.UpVote ? 'blue' : undefined}
       >
         <ArrowUpIcon/>
-      </Button>
-      <Text display={"inline-block"}>
+      </IconButton>
+      <Text display={"inline-block"}
+            minWidth={"2em"}
+            align={"center"}
+      >
         {scoreText}
       </Text>
-      <Button onClick={handleDownvotePress}
-              disabled={!userId}
-              colorScheme={!!vote && vote.type === VoteType.DownVote ? 'blue' : undefined}
-              aria-label="Downvote"
+      <IconButton onClick={handleDownvotePress}
+                  disabled={!user}
+                  colorScheme={!!vote && vote.type === VoteType.DownVote ? 'blue' : undefined}
+                  aria-label="Downvote"
       >
         <ArrowDownIcon/>
-      </Button>
+      </IconButton>
     </Box>
   )
 }

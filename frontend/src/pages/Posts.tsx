@@ -16,6 +16,7 @@ import AddPostModal from '../components/AddPostModal';
 import { Post } from '../interfaces/Post';
 import { Link, useNavigate, useLocation } from 'react-router-dom';  // Add useNavigate
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import VoteWidget from "../components/VoteWidget";
 
 const Posts: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -204,10 +205,11 @@ const Posts: React.FC = () => {
                 Avtor: {post?.userId?.username || 'Neznan uporabnik'}
               </Text>
               <Link to={`/posts/${post._id}`} state={{ fromPage: currentPage }}>
-                <Button colorScheme="teal" mt={4}>
+                <Button colorScheme="teal" mt={4} mb={4}>
                   Preberi več
                 </Button>
               </Link>
+              <VoteWidget postId={post._id}/>
               {user && (
                 <Box mt={4}>
                   {(user.role === 'admin' || (post.userId && post.userId._id === user._id)) && (
