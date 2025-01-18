@@ -195,29 +195,63 @@ const VoteWidget: React.FC<VoteWidgetProps> = ({
   }
 
   return (
-    <Box>
-      <IconButton onClick={handleUpvotePress}
-                  disabled={!user}
-                  aria-label="Upvote"
-                  colorScheme={!!vote && vote.type === VoteType.UpVote ? 'blue' : undefined}
-      >
-        <ArrowUpIcon/>
-      </IconButton>
-      <Text display={"inline-block"}
-            minWidth={"2em"}
-            align={"center"}
+    <Box
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+      gap={4}
+      bg="gray.50"
+      p={4}
+      borderRadius="md"
+      boxShadow="sm"
+      _hover={{ bg: 'gray.100' }}
+      transition="background-color 0.3s ease"
+    >
+      {/* Upvote Button */}
+      <IconButton
+        onClick={handleUpvotePress}
+        disabled={!user}
+        aria-label="Upvote"
+        colorScheme={!!vote && vote.type === VoteType.UpVote ? 'blue' : undefined}
+        icon={<ArrowUpIcon />}
+        size="lg"
+        variant={!!vote && vote.type === VoteType.UpVote ? 'solid' : 'outline'} // Solid variant when active
+        _hover={{ bg: 'blue.50' }}
+        _active={{ bg: 'blue.100' }}
+        isRound
+        borderColor={!!vote && vote.type === VoteType.UpVote ? 'blue.500' : undefined} // Add a border to active button
+        boxShadow={!!vote && vote.type === VoteType.UpVote ? '0 0 0 3px rgba(66, 153, 225, 0.6)' : undefined} // Add shadow to active button
+      />
+    
+      {/* Score Text */}
+      <Text
+        display="inline-block"
+        minWidth="2em"
+        textAlign="center"
+        fontWeight="bold"
+        fontSize="lg"
+        color="gray.800"
       >
         {scoreText}
       </Text>
-      <IconButton onClick={handleDownvotePress}
-                  disabled={!user}
-                  colorScheme={!!vote && vote.type === VoteType.DownVote ? 'blue' : undefined}
-                  aria-label="Downvote"
-      >
-        <ArrowDownIcon/>
-      </IconButton>
+    
+      {/* Downvote Button */}
+      <IconButton
+        onClick={handleDownvotePress}
+        disabled={!user}
+        colorScheme={!!vote && vote.type === VoteType.DownVote ? 'blue' : undefined}
+        aria-label="Downvote"
+        icon={<ArrowDownIcon />}
+        size="lg"
+        variant={!!vote && vote.type === VoteType.DownVote ? 'solid' : 'outline'} // Solid variant when active
+        _hover={{ bg: 'red.50' }}
+        _active={{ bg: 'red.100' }}
+        isRound
+        borderColor={!!vote && vote.type === VoteType.DownVote ? 'red.500' : undefined} // Add a border to active button
+        boxShadow={!!vote && vote.type === VoteType.DownVote ? '0 0 0 3px rgba(244, 85, 85, 0.6)' : undefined} // Add shadow to active button
+      />
     </Box>
-  )
+  );    
 }
 
 export default VoteWidget;

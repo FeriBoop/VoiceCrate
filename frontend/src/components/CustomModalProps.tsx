@@ -1,12 +1,14 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import {
-    Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
-    //Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useBreakpointValue,
+  Box,
 } from '@chakra-ui/react';
 import { CustomModalProps } from '../interfaces/CustomModalProps';
 
@@ -22,32 +24,73 @@ import { CustomModalProps } from '../interfaces/CustomModalProps';
  * @param duration
  * @constructor
  */
-const CustomModal: React.FC<CustomModalProps> = ({ isOpen, onClose, title, message, headerColor = "blue.500",
-    bodyColor = "gray.700",
-    backgroundColor = "white",
-    duration = 1500
- }) => {
-    useEffect(() => { // sets to automatically close window after provided time
-        if(isOpen){
-            const timer = setTimeout(() => {
-                onClose();
-            }, duration);
-            return () => clearTimeout(timer);
-        }
-    })
-    //return render
-    return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent bg={backgroundColor}>
-                <ModalHeader color={headerColor} textAlign={"center"}>{title}</ModalHeader>
-                <ModalBody color={bodyColor} textAlign={"center"}>{message}</ModalBody>
-                <ModalFooter>
-                    {/*<Button onClick={onClose}>Close</Button>*/}
-                </ModalFooter>
-            </ModalContent>
-        </Modal>
-    );
+const CustomModal: React.FC<CustomModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  message,
+  headerColor = 'blue.500',
+  bodyColor = 'gray.700',
+  backgroundColor = 'white',
+  duration = 2000,
+}) => {
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, duration);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, onClose, duration]);
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
+      <ModalOverlay />
+      <ModalContent
+        bg={backgroundColor}
+        borderRadius="lg"
+        boxShadow="lg"
+        transition="all 0.3s ease"
+      >
+        <ModalHeader
+          color={headerColor}
+          textAlign="center"
+          fontWeight="bold"
+          fontSize={useBreakpointValue({ base: 'lg', md: 'xl' })}
+          borderBottom="2px solid"
+          borderColor={headerColor}
+          py={4}
+        >
+          {title}
+        </ModalHeader>
+        <ModalBody
+          color={bodyColor}
+          textAlign="center"
+          fontSize={useBreakpointValue({ base: 'sm', md: 'md' })}
+          px={6}
+          py={4}
+        >
+          {message}
+        </ModalBody>
+        <ModalFooter justifyContent="center" pb={6}>
+          {/* Optional footer buttons */}
+          <Button
+            colorScheme="blue"
+            variant="solid"
+            size="sm"
+            onClick={onClose}
+            px={6}
+            py={3}
+            fontWeight="medium"
+            _hover={{ bg: 'blue.600' }}
+            _active={{ bg: 'blue.700' }}
+          >
+            Close
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
 };
 
 export default CustomModal;

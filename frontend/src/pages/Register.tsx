@@ -5,12 +5,17 @@ import {
     FormControl,
     FormLabel,
     Input,
-    Stack,
-    Text,
-    Heading,
-    useToast,
+    InputGroup,
+    InputRightElement,
     Checkbox,
-} from '@chakra-ui/react';
+    Heading,
+    Text,
+    Stack,
+    VStack,
+    useColorModeValue,
+    IconButton,
+  } from "@chakra-ui/react";
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import {UserContext, UserContextType} from '../userContext';
 import {useNavigate} from 'react-router-dom';
 import CustomModal from "../components/CustomModalProps";
@@ -164,113 +169,158 @@ const Register: React.FC = () => {
 
     return (
         <Box
-            maxW="lg"
-            mx="auto"
-            mt={12}
-            p={8}
-            borderWidth={1}
-            borderRadius="lg"
-            boxShadow="2xl"
-            bg="white"
+          maxW="lg"
+          mx="auto"
+          mt={12}
+          p={8}
+          borderWidth={1}
+          borderRadius="lg"
+          boxShadow="2xl"
+          bg={useColorModeValue("white", "gray.800")}
         >
-            <Stack align="center" mb={6}>
-                <Heading as="h2" size="lg" color="blue.600">
-                    Registracija YourVoice
-                </Heading>
-                <Text fontSize="md" color="gray.600">
-                    Pridružite se naši skupnosti!
-                </Text>
+          <VStack spacing={6} align="center" mb={6}>
+            <Heading as="h2" size="lg" color={useColorModeValue("blue.600", "blue.300")}>
+              Registracija YourVoice
+            </Heading>
+            <Text fontSize="md" color={useColorModeValue("gray.600", "gray.400")} textAlign="center">
+              Pridružite se naši skupnosti!
+            </Text>
+          </VStack>
+    
+          <form onSubmit={handleRegister}>
+            <Stack spacing={6}>
+              {/* Email Field */}
+              <FormControl id="email" isRequired>
+                <FormLabel fontSize="lg" color={useColorModeValue("gray.700", "gray.300")}>
+                  Email
+                </FormLabel>
+                <Input
+                  type="email"
+                  placeholder="Vnesite svoj email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => setEmailError(emailRegex.test(email) ? "" : "Email ni veljaven!")}
+                  size="lg"
+                  focusBorderColor="blue.500"
+                  bg={useColorModeValue("gray.50", "gray.700")}
+                />
+                {emailError && (
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {emailError}
+                  </Text>
+                )}
+              </FormControl>
+    
+              {/* Username Field */}
+              <FormControl id="username" isRequired>
+                <FormLabel fontSize="lg" color={useColorModeValue("gray.700", "gray.300")}>
+                  Uporabniško ime
+                </FormLabel>
+                <Input
+                  type="text"
+                  placeholder="Vnesite uporabniško ime"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  onBlur={() =>
+                    setUsernameError(username.length >= usernameLength ? "" : "Uporabniško ime mora biti dolgo vsaj 3 znake!")
+                  }
+                  size="lg"
+                  focusBorderColor="blue.500"
+                  bg={useColorModeValue("gray.50", "gray.700")}
+                />
+                {usernameError && (
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {usernameError}
+                  </Text>
+                )}
+              </FormControl>
+    
+              {/* Password Field */}
+              <FormControl id="password" isRequired>
+                <FormLabel fontSize="lg" color={useColorModeValue("gray.700", "gray.300")}>
+                  Geslo
+                </FormLabel>
+                <InputGroup size="lg">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Vnesite geslo"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() =>
+                      setPasswordError(
+                        passwordRegex.test(password)
+                          ? ""
+                          : "Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko!"
+                      )
+                    }
+                    focusBorderColor="blue.500"
+                    bg={useColorModeValue("gray.50", "gray.700")}
+                  />
+                  <InputRightElement>
+                    <IconButton
+                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={() => setShowPassword(!showPassword)}
+                      size="sm"
+                      variant="ghost"
+                      aria-label={showPassword ? "Skrij geslo" : "Prikaži geslo"}
+                    />
+                  </InputRightElement>
+                </InputGroup>
+                {passwordError && (
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {passwordError}
+                  </Text>
+                )}
+              </FormControl>
+    
+              {/* Confirm Password Field */}
+              <FormControl id="passwordAgain" isRequired>
+                <FormLabel fontSize="lg" color={useColorModeValue("gray.700", "gray.300")}>
+                  Ponovite geslo
+                </FormLabel>
+                <InputGroup size="lg">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Ponovite geslo"
+                    value={passwordAgain}
+                    onChange={(e) => setPasswordAgain(e.target.value)}
+                    onBlur={() =>
+                      setPasswordAgainError(password === passwordAgain ? "" : "Gesli se ne ujemata!")
+                    }
+                    focusBorderColor="blue.500"
+                    bg={useColorModeValue("gray.50", "gray.700")}
+                  />
+                  <InputRightElement>
+                    <IconButton
+                      icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={() => setShowPassword(!showPassword)}
+                      size="sm"
+                      variant="ghost"
+                      aria-label={showPassword ? "Skrij geslo" : "Prikaži geslo"}
+                    />
+                  </InputRightElement>
+                </InputGroup>
+                {passwordAgainError && (
+                  <Text color="red.500" fontSize="sm" mt={1}>
+                    {passwordAgainError}
+                  </Text>
+                )}
+              </FormControl>
+    
+              {/* Register Button */}
+              <Button
+                colorScheme="blue"
+                type="submit"
+                size="lg"
+                width="full"
+                mt={4}
+                boxShadow="md"
+              >
+                Registracija
+              </Button>
             </Stack>
-
-            <form onSubmit={handleRegister}>
-                <Stack spacing={5}>
-                    <FormControl id="email" isRequired>
-                        <FormLabel fontSize="lg">Email:</FormLabel>
-                        <Input
-                            type="text"
-                            placeholder="Vnesite svoj email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            onBlur={() => setEmailError(emailRegex.test(email) ? '' : 'Email ni veljaven!')}
-                            size="lg"
-                        />
-                        {emailError !== '' &&
-                            <Text color="red.500" fontSize="sm" textAlign="left">
-                                {emailError}
-                            </Text>
-                        }
-                    </FormControl>
-
-                    <FormControl id="username" isRequired>
-                        <FormLabel fontSize="lg">Uporabniško ime</FormLabel>
-                        <Input
-                            type="text"
-                            placeholder="Vnesite uporabniško ime"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            onBlur={() => setUsernameError(username.length >= usernameLength ? '' : 'Uporabniško ime mora biti dolgo vsaj 3 znake!')}
-                            size="lg"
-                        />
-                        {usernameError !== '' &&
-                            <Text color="red.500" fontSize="sm" textAlign="left">
-                                {usernameError}
-                            </Text>
-                        }
-                    </FormControl>
-
-                    <FormControl id="password" isRequired>
-                        <FormLabel fontSize="lg">Geslo</FormLabel>
-                        <Input
-                            type={showPassword ? 'text' : 'password'} // Uporabi 'text' ali 'password' glede na stanje
-                            placeholder="Vnesite geslo"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            onBlur={() => setPasswordError(passwordRegex.test(password) ? '' : 'Geslo mora biti dolgo vsaj 8 znakov in vsebovati vsaj eno veliko črko in eno številko!')}
-                            size="lg"
-                        />
-                        {passwordError !== '' &&
-                            <Text color="red.500" fontSize="sm" textAlign="left">
-                                {passwordError}
-                            </Text>
-                        }
-                    </FormControl>
-                    <FormControl id="passwordAgain" isRequired>
-                        <FormLabel fontSize="lg">Ponovite geslo</FormLabel>
-                        <Input
-                            type={showPassword ? 'text' : 'password'} // Uporabi 'text' ali 'password' glede na stanje
-                            placeholder="Ponovite geslo"
-                            value={passwordAgain}
-                            onChange={(e) => setPasswordAgain(e.target.value)}
-                            onBlur={() => setPasswordAgainError(password === passwordAgain ? '' : 'Gesli se ne ujemata!')}
-                            size="lg"
-                        />
-                        {passwordAgainError !== '' &&
-                            <Text color="red.500" fontSize="sm" textAlign="left">
-                                {passwordAgainError}
-                            </Text>
-                        }
-                        <Checkbox
-                            mt={2}
-                            isChecked={showPassword}
-                            onChange={() => setShowPassword(!showPassword)}
-                            required={false}
-                        >
-                            Prikaži geslo
-                        </Checkbox>
-                    </FormControl>
-
-                    <Button
-                        colorScheme="blue"
-                        type="submit"
-                        mt={4}
-                        size="lg"
-                        width="full"
-                    >
-                        Registracija
-                    </Button>
-                </Stack>
-            </form>
-            <CustomModal
+          </form>
+          <CustomModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 title={modalTitle}
@@ -281,7 +331,7 @@ const Register: React.FC = () => {
                 duration={1500}
             />
         </Box>
-    );
+      );
 };
 
 export default Register;

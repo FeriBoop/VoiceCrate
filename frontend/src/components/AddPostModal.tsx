@@ -19,10 +19,12 @@ import {
   Textarea,
   useToast,
   VStack,
+  Box,
 } from '@chakra-ui/react';
 
 import {UserContext} from '../userContext';
 import {Post} from '../interfaces/Post';
+import '@fortawesome/fontawesome-free/css/all.css';
 
 interface AddPostModalProps {
   isOpen: boolean;
@@ -198,122 +200,176 @@ const AddPostModal: React.FC<AddPostModalProps> = ({
 
 
   return (
-      <Modal
-          isOpen={isOpen}
-          onClose={handleModalClose} // Use handleModalClose here
-          initialFocusRef={titleInputRef} // Set focus on the first input field
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>{post ? 'Uredi objavo' : 'Dodaj novo objavo'}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <FormControl mb={4}>
-              <FormLabel>Naslov</FormLabel>
-              <Input
-                  ref={titleInputRef} // Ref for focus
-                  placeholder="Vnesite naslov"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-              />
-            </FormControl>
-            <FormControl mb={4}>
-              <FormLabel>Kategorija</FormLabel>
-              <Input
-                  placeholder="Vnesite kategorijo"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-              />
-            </FormControl>
-            <FormControl mb={4}>
-              <FormLabel>Vsebina</FormLabel>
-              <Textarea
-                  placeholder="Vnesite vsebino"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-              />
-            </FormControl>
-
-            {/* images */}
-            <FormControl mb={4}>
-              <FormLabel>Images</FormLabel>
-              <Text fontWeight="bold" mb={2}>
-                Existing Images:
+    <Modal
+      isOpen={isOpen}
+      onClose={handleModalClose}
+      initialFocusRef={titleInputRef}
+    >
+      <ModalOverlay />
+      <ModalContent borderRadius="md" boxShadow="xl">
+        <ModalHeader fontSize="xl" fontWeight="bold">
+          {post ? 'Uredi objavo' : 'Dodaj novo objavo'}
+        </ModalHeader>
+        <ModalCloseButton />
+        <ModalBody pb={6}>
+          {/* Title Field */}
+          <FormControl mb={4}>
+            <FormLabel fontWeight="semibold" color="gray.600">
+              Naslov
+            </FormLabel>
+            <Input
+              ref={titleInputRef}
+              placeholder="Vnesite naslov"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              focusBorderColor="blue.400"
+              borderRadius="md"
+            />
+          </FormControl>
+  
+          {/* Category Field */}
+          <FormControl mb={4}>
+            <FormLabel fontWeight="semibold" color="gray.600">
+              Kategorija
+            </FormLabel>
+            <Input
+              placeholder="Vnesite kategorijo"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              focusBorderColor="blue.400"
+              borderRadius="md"
+            />
+          </FormControl>
+  
+          {/* Content Field */}
+          <FormControl mb={4}>
+            <FormLabel fontWeight="semibold" color="gray.600">
+              Vsebina
+            </FormLabel>
+            <Textarea
+              placeholder="Vnesite vsebino"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              focusBorderColor="blue.400"
+              borderRadius="md"
+              resize="vertical"
+            />
+          </FormControl>
+  
+          {/* Existing Images */}
+          <FormControl mb={6}>
+            <FormLabel fontWeight="semibold" color="gray.600">
+              Slike
+            </FormLabel>
+            <Box bg="gray.50" p={4} borderRadius="md" mb={4}>
+              <Text fontWeight="bold" mb={2} color="gray.600">
+                Obstoječe slike:
               </Text>
               <VStack spacing={3} align="stretch">
                 {existingImages.map((image, index) => (
-                    <HStack
-                        key={index}
-                        p={2}
-                        borderWidth="1px"
-                        borderRadius="md"
-                        overflow="hidden"
-                        spacing={3}
-                        align="center"
-                    >
-                      <Image
-                          src={'http://localhost:3000'+image.imageUrl}
-                          alt={image.imageName}
-                          boxSize="50px"
-                          objectFit="cover"
-                          borderRadius="md"
-                      />
-                      <Text flex="1">{image.imageName}</Text>
-                      <CloseButton
-                          size="sm"
-                          onClick={() => removeExistingImage(index)}
-                      />
-                    </HStack>
+                  <HStack
+                    key={index}
+                    p={2}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    overflow="hidden"
+                    spacing={3}
+                    align="center"
+                  >
+                    <Image
+                      src={'http://localhost:3000' + image.imageUrl}
+                      alt={image.imageName}
+                      boxSize="50px"
+                      objectFit="cover"
+                      borderRadius="md"
+                    />
+                    <Text flex="1" color="gray.700">
+                      {image.imageName}
+                    </Text>
+                    <CloseButton
+                      size="sm"
+                      onClick={() => removeExistingImage(index)}
+                      color="red.500"
+                    />
+                  </HStack>
                 ))}
               </VStack>
-              <Text fontWeight="bold" mt={4} mb={2}>
-                Upload New Images:
+            </Box>
+  
+            {/* Upload New Images */}
+            <Box bg="gray.50" p={4} borderRadius="md">
+              <Text fontWeight="bold" mb={2} color="gray.600">
+                Naloži nove slike:
               </Text>
-              <Button as="label" htmlFor="file-upload" variant="outline" mb={2}>
-                Upload Images
+              <Button
+                as="label"
+                htmlFor="file-upload"
+                variant="solid"
+                colorScheme="blue"
+                mb={3}
+                size="sm"
+                borderRadius="md"
+              >
+                <i className="fas fa-upload"></i> Naloži slike
               </Button>
               <Input
-                  id="file-upload"
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  display="none"
-                  onChange={handleFileChange}
+                id="file-upload"
+                type="file"
+                multiple
+                accept="image/*"
+                display="none"
+                onChange={handleFileChange}
               />
               <VStack spacing={3} align="stretch">
                 {newImages.map((image, index) => (
-                    <HStack
-                        key={index}
-                        p={2}
-                        borderWidth="1px"
-                        borderRadius="md"
-                        overflow="hidden"
-                        spacing={3}
-                        align="center"
-                    >
-                      <Image
-                          src={URL.createObjectURL(image)}
-                          alt={image.name}
-                          boxSize="50px"
-                          objectFit="cover"
-                          borderRadius="md"
-                      />
-                      <Text flex="1">{image.name}</Text>
-                      <CloseButton size="sm" onClick={() => removeNewImage(index)} />
-                    </HStack>
+                  <HStack
+                    key={index}
+                    p={2}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    overflow="hidden"
+                    spacing={3}
+                    align="center"
+                  >
+                    <Image
+                      src={URL.createObjectURL(image)}
+                      alt={image.name}
+                      boxSize="50px"
+                      objectFit="cover"
+                      borderRadius="md"
+                    />
+                    <Text flex="1" color="gray.700">
+                      {image.name}
+                    </Text>
+                    <CloseButton
+                      size="sm"
+                      onClick={() => removeNewImage(index)}
+                      color="red.500"
+                    />
+                  </HStack>
                 ))}
               </VStack>
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" onClick={handleSubmit} mr={3}>
-              {post ? 'Shrani' : 'Dodaj'}
-            </Button>
-            <Button onClick={handleModalClose}>Prekliči</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-  );
+            </Box>
+          </FormControl>
+        </ModalBody>
+  
+        <ModalFooter>
+          <Button
+            colorScheme="blue"
+            onClick={handleSubmit}
+            mr={3}
+            size="md"
+            borderRadius="md"
+          >
+            {post ? 'Shrani' : 'Dodaj'}
+          </Button>
+          <Button onClick={handleModalClose} variant="ghost" size="md">
+            Prekliči
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );  
 };
 
 export default AddPostModal;

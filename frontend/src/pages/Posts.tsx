@@ -10,6 +10,7 @@ import {
   Input,
   HStack,
   IconButton,
+  Flex
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
 import AddPostModal from '../components/AddPostModal';
@@ -147,112 +148,136 @@ const Posts: React.FC = () => {
   }, [categoryFilter, authorFilter, dateFilter]);
 
   return (
-    <Box p={6} maxW="container.lg" mx="auto">
-      <Heading as="h2" size="xl" mb={6} textAlign="center">
+    <Box p={8} maxW="container.xl" mx="auto" bg="gray.50" borderRadius="lg" shadow="lg">
+      <Heading as="h2" size="2xl" mb={8} textAlign="center" color="teal.600">
         Forum - Objave
       </Heading>
-
+  
       {user && (
-        <Button onClick={onOpen} colorScheme="blue" mb={6}>
-          Dodaj novo objavo
+        <Button onClick={onOpen} colorScheme="teal" size="lg" mb={8} w="full">
+          + Dodaj novo objavo
         </Button>
       )}
-
-      {/* Filters */}
-      <Box mb={6}>
-        <Heading fontSize="xl">Filtri:</Heading>
-        <Stack direction="row" spacing={4}>
+  
+      {/* Filters Section */}
+      <Box mb={8} p={6} bg="white" borderRadius="lg" shadow="md">
+        <Heading fontSize="lg" mb={4} color="gray.700">
+          Filtri
+        </Heading>
+        <Stack direction={{ base: "column", md: "row" }} spacing={4}>
           <Input
             placeholder="Kategorija"
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
+            focusBorderColor="teal.500"
           />
           <Input
             placeholder="Avtor"
             value={authorFilter}
             onChange={(e) => setAuthorFilter(e.target.value)}
+            focusBorderColor="teal.500"
           />
           <Input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
+            focusBorderColor="teal.500"
           />
         </Stack>
       </Box>
-
+  
+      {/* Posts Section */}
       {loading ? (
-        <Spinner size="xl" />
+        <Flex justify="center" align="center" mt={12}>
+          <Spinner size="xl" thickness="4px" color="teal.500" />
+        </Flex>
       ) : filteredPosts.length === 0 ? (
-        <Text fontSize="lg" color="gray.500" textAlign="center" mt={8}>
+        <Text fontSize="lg" color="gray.500" textAlign="center" mt={12}>
           Trenutno ni nobenih objav.
         </Text>
       ) : (
-        <Stack spacing={6}>
+        <Stack spacing={8}>
           {filteredPosts.map((post) => (
             <Box
               key={post._id}
-              p={5}
+              p={6}
+              bg="white"
               shadow="md"
-              borderWidth="1px"
               borderRadius="lg"
-              textAlign={"center"}
-              _hover={{ bg: 'gray.50' }}
+              transition="all 0.3s"
+              _hover={{ transform: "scale(1.02)", shadow: "lg" }}
             >
-              <Heading fontSize="xl">{post.title}</Heading>
-              <Text mt={2} fontSize="md" color="gray.600">
+              <Heading fontSize="2xl" color="teal.600">
+                {post.title}
+              </Heading>
+              <Text mt={2} fontSize="sm" color="gray.500">
                 Kategorija: {post.category}
               </Text>
               {post.images?.[0] && (
-                  <Box mb={8} mt={8} display="flex" justifyContent="center">
-                    <img
-                        src={`http://localhost:3000${post.images[0].imageUrl}`}
-                        alt={post.images[0].imageName || 'Post image'}
-                        style={{ width: '40%', height: '40%', borderRadius: '8px' }}
-                    />
-                  </Box>
+                <Flex justify="center" mt={6}>
+                  <img
+                    src={`http://localhost:3000${post.images[0].imageUrl}`}
+                    alt={post.images[0].imageName || "Post image"}
+                    style={{
+                      width: "60%",
+                      height: "auto",
+                      borderRadius: "12px",
+                      boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                    }}
+                  />
+                </Flex>
               )}
-              <Text mt={2} fontSize="sm" color="gray.500">
-                Avtor: {post?.userId?.username || 'Neznan uporabnik'}
+              <Text mt={4} fontSize="sm" color="gray.600">
+                Avtor: {post?.userId?.username || "Neznan uporabnik"}
               </Text>
-              <Link to={`/posts/${post._id}`} state={{ fromPage: currentPage }}>
-                <Button colorScheme="teal" mt={4} mb={4}>
-                  Preberi več
-                </Button>
-              </Link>
-              <VoteWidget postId={post._id}/>
+              <Flex justify="center" mt={6}>
+                <Link to={`/posts/${post._id}`} state={{ fromPage: currentPage }}>
+                  <Button colorScheme="teal" size="md" px={8}>
+                    Preberi več
+                  </Button>
+                </Link>
+              </Flex>
+              <Box mt={6}>
+                <VoteWidget postId={post._id}/>
+              </Box>
               {user && (
-                <Box mt={4}>
-                  {(user.role === 'admin' || (post.userId && post.userId._id === user._id)) && (
+                <Flex justify="flex-end" mt={6}>
+                  {(user.role === "admin" || (post.userId && post.userId._id === user._id)) && (
                     <>
                       <Button
                         colorScheme="green"
                         mr={3}
+                        size="sm"
                         onClick={() => handleEditPost(post)}
                       >
                         Uredi
                       </Button>
                       <Button
                         colorScheme="red"
+                        size="sm"
                         onClick={() => handleDeletePost(post._id)}
                       >
                         Izbriši
                       </Button>
                     </>
                   )}
-                </Box>
+                </Flex>
               )}
             </Box>
           ))}
         </Stack>
       )}
-      <HStack justify="space-between" mt={6}>
+  
+      {/* Pagination */}
+      <Flex justify="space-between" align="center" mt={12}>
         <IconButton
           icon={<ChevronLeftIcon />}
           onClick={handlePreviousPage}
           isDisabled={currentPage === 1}
           aria-label="Previous Page"
+          colorScheme="teal"
         />
-        <Text>
+        <Text fontSize="lg" color="gray.600">
           Page {currentPage} of {totalPages}
         </Text>
         <IconButton
@@ -260,8 +285,11 @@ const Posts: React.FC = () => {
           onClick={handleNextPage}
           isDisabled={currentPage === totalPages}
           aria-label="Next Page"
+          colorScheme="teal"
         />
-      </HStack>
+      </Flex>
+  
+      {/* Add Post Modal */}
       <AddPostModal
         isOpen={isOpen}
         onClose={() => {
@@ -272,7 +300,7 @@ const Posts: React.FC = () => {
         post={selectedPost}
       />
     </Box>
-  );
+  );  
 };
 
 export default Posts;
