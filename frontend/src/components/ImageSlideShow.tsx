@@ -1,88 +1,107 @@
-import { Box, Flex, IconButton } from '@chakra-ui/react';
+import { Box, Flex, IconButton, Text, useBreakpointValue } from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { useState } from 'react';
 
 // Define the image type
 interface Image {
-    imageName: string;
-    imageUrl: string;
+  imageName: string;
+  imageUrl: string;
 }
 
 interface ImageSlideshowProps {
-    images: Image[];
+  images: Image[];
 }
 
 const ImageSlideshow: React.FC<ImageSlideshowProps> = ({ images }) => {
-    const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
 
-    const handlePrev = () => {
-        setCurrentIndex((prevIndex) =>
-            prevIndex === 0 ? images.length - 1 : prevIndex - 1
-        );
-    };
-
-    const handleNext = () => {
-        setCurrentIndex((prevIndex) =>
-            prevIndex === images.length - 1 ? 0 : prevIndex + 1
-        );
-    };
-
-    return (
-        <Box position="relative" maxWidth="600px" mx="auto">
-            {/* Display current image */}
-            {images?.[currentIndex] && (
-                <Box
-                    display="flex"
-                    justifyContent="center"
-                    alignItems="center"
-                    width="300px" // Set fixed width
-                    height="300px" // Set fixed height
-                    borderRadius="8px"
-                    overflow="hidden"
-                    bg="gray.100" // Background color for empty space
-                    mx="auto" // Center the container
-                >
-                    <img
-                        src={`http://localhost:3000${images[currentIndex].imageUrl}`}
-                        alt={images[currentIndex].imageName || 'Slideshow image'}
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain', // Ensures the image fits while maintaining aspect ratio
-                        }}
-                    />
-                </Box>
-            )}
-
-            {/* Navigation Controls */}
-            <Flex justifyContent="space-between" mt={2}>
-                <IconButton
-                    onClick={handlePrev}
-                    aria-label="Previous image"
-                    isDisabled={images.length <= 1} // Disable if only one image
-                    icon={
-                        <img
-                            src="/images/left_arrow.svg" // Replace with the path to your icon
-                            alt="Next"
-                            style={{ width: '20px', height: '20px' }} // Adjust size as needed
-                        />
-                    }
-                >
-                </IconButton>
-                <IconButton
-                    onClick={handleNext}
-                    aria-label="Next image"
-                    isDisabled={images.length <= 1} // Disable if only one image
-                    icon={
-                        <img
-                            src="/images/right_arrow.svg" // Replace with the path to your icon
-                            alt="Next"
-                            style={{ width: '20px', height: '20px' }} // Adjust size as needed
-                        />
-                    }
-                />
-            </Flex>
-        </Box>
+  const handlePrev = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === 0 ? images.length - 1 : prevIndex - 1
     );
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prevIndex) =>
+      prevIndex === images.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  const arrowSize = useBreakpointValue({ base: '4', md: '6' });
+
+  return (
+    <Box
+      position="relative"
+      maxW="600px"
+      mx="auto"
+      p={4}
+      borderWidth="1px"
+      borderRadius="lg"
+      shadow="lg"
+      bg="white"
+      _dark={{ bg: 'gray.800' }}
+    >
+      {/* Display current image */}
+      {images?.[currentIndex] ? (
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          w="full"
+          h="300px"
+          borderRadius="md"
+          overflow="hidden"
+          bg="gray.50"
+          mx="auto"
+        >
+          <img
+            src={`http://localhost:3000${images[currentIndex].imageUrl}`}
+            alt={images[currentIndex].imageName || 'Slideshow image'}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        </Box>
+      ) : (
+        <Box
+          w="full"
+          h="300px"
+          bg="gray.100"
+          borderRadius="md"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          mx="auto"
+        >
+          <Text color="gray.500">No image available</Text>
+        </Box>
+      )}
+
+      {/* Navigation Controls */}
+      <Flex justify="space-between" align="center" mt={4}>
+        <IconButton
+          onClick={handlePrev}
+          aria-label="Previous image"
+          isDisabled={images.length <= 1}
+          icon={<ChevronLeftIcon w={arrowSize} h={arrowSize} />}
+          variant="ghost"
+          colorScheme="teal"
+          size="lg"
+        />
+        <IconButton
+          onClick={handleNext}
+          aria-label="Next image"
+          isDisabled={images.length <= 1}
+          icon={<ChevronRightIcon w={arrowSize} h={arrowSize} />}
+          variant="ghost"
+          colorScheme="teal"
+          size="lg"
+        />
+      </Flex>
+    </Box>
+  );
 };
 
 export default ImageSlideshow;

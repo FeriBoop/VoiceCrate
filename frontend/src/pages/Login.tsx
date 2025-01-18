@@ -11,8 +11,13 @@ import {
   Image,
   Heading,
   useToast,
-  Checkbox,
+  useColorModeValue,
+  VStack,
+  InputRightElement,
+  InputGroup,
+  IconButton,
 } from '@chakra-ui/react';
+import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 import { UserContext, UserContextType } from '../userContext';
 import CustomModal from "../components/CustomModalProps";
 
@@ -44,6 +49,10 @@ const Login: React.FC = () => {
   //user session variables
   const userContext = useContext<UserContextType>(UserContext);
   const toast = useToast();
+
+  // style variables
+  const bg = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.300", "gray.600");
 
   /**
    * login function. It sends post request on API and handles the result from it
@@ -130,104 +139,121 @@ const Login: React.FC = () => {
   //return render
   return (
     <Box
-      maxW="xl"
+      maxW="md"
       mx="auto"
       mt={12}
       p={8}
       borderWidth={1}
       borderRadius="lg"
-      boxShadow="2xl"
-      bg="white"
+      boxShadow="lg"
+      bg={bg}
+      borderColor={borderColor}
     >
-      {userContext.user ? <Navigate replace to="/" /> : null}
-
-      <Stack align="center" mb={6}>
+      {userContext.user && <Navigate replace to="/" />}
+  
+      <VStack spacing={6} align="center" mb={8}>
         <Image
           src="images/default.png"
           alt="YourVoice Logo"
-          boxSize="150px"
-          mb={4}
+          boxSize="120px"
+          borderRadius="full"
         />
-        <Heading as="h2" size="lg" color="blue.600">
+        <Heading as="h2" size="lg" color="blue.600" textAlign="center">
           Prijava v YourVoice
         </Heading>
-        <Text fontSize="md" color="gray.600">
+        <Text fontSize="md" color="gray.500" textAlign="center">
           Pridružite se pogovoru!
         </Text>
-      </Stack>
-
+      </VStack>
+  
       <form onSubmit={handleLogin}>
         <Stack spacing={5}>
+          {/* Username Field */}
           <FormControl id="username" isRequired>
-            <FormLabel fontSize="lg">Uporabniško ime</FormLabel>
+            <FormLabel fontSize="md" color="gray.700">
+              Uporabniško ime
+            </FormLabel>
             <Input
               type="text"
               placeholder="Vnesite uporabniško ime"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              size="lg"
+              size="md"
+              focusBorderColor="blue.500"
             />
-            {usernameError !== '' &&
-                <Text color="red.500" fontSize="sm" textAlign="center">
-                  {usernameError}
-                </Text>
-            }
+            {usernameError && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {usernameError}
+              </Text>
+            )}
           </FormControl>
-
+  
+          {/* Password Field */}
           <FormControl id="password" isRequired>
-            <FormLabel fontSize="lg">Geslo</FormLabel>
-            <Input
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Vnesite geslo"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              size="lg"
-            />
-            {passwordError === '' &&
-                <Text color="red.500" fontSize="sm" textAlign="left">
-                  {usernameError}
-                </Text>
-            }
-            <Checkbox
-              mt={2}
-              isChecked={showPassword}
-              onChange={() => setShowPassword(!showPassword)}
-              required={false}
-            >
-              Prikaži geslo
-            </Checkbox>
+            <FormLabel fontSize="md" color="gray.700">
+              Geslo
+            </FormLabel>
+            <InputGroup size="md">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Vnesite geslo"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                size="md"
+                focusBorderColor="blue.500"
+              />
+              <InputRightElement width="4.5rem">
+                <IconButton
+                  icon={showPassword ? <ViewOffIcon /> : <ViewIcon />}
+                  onClick={() => setShowPassword(!showPassword)}
+                  size="sm"
+                  variant="ghost"
+                  aria-label={showPassword ? "Skrij geslo" : "Prikaži geslo"}
+                />
+              </InputRightElement>
+            </InputGroup>
+            {passwordError && (
+              <Text color="red.500" fontSize="sm" mt={1}>
+                {passwordError}
+              </Text>
+            )}
           </FormControl>
-
+  
+          {/* Error Message */}
           {error && (
-            <Text color="red.500" fontSize="sm" textAlign="center">
+            <Text color="red.500" fontSize="sm" textAlign="center" mt={2}>
               {error}
             </Text>
           )}
-
+  
+          {/* Submit Button */}
           <Button
             colorScheme="blue"
             type="submit"
-            mt={4}
             size="lg"
             width="full"
+            mt={4}
+            boxShadow="md"
+            _hover={{ bg: "blue.600" }}
           >
             Prijava
           </Button>
         </Stack>
       </form>
+  
+      {/* Custom Modal */}
       <CustomModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={modalTitle}
-          message={modalMessage}
-          backgroundColor={backgroundColor}
-          headerColor={headerColor}
-          bodyColor={bodyColor}
-          duration={1500}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        message={modalMessage}
+        backgroundColor={backgroundColor}
+        headerColor={headerColor}
+        bodyColor={bodyColor}
+        duration={6000}
       />
     </Box>
-
-  );
+  );  
 };
 
 export default Login;

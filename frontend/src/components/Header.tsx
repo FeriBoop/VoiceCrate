@@ -1,6 +1,6 @@
-// Header.tsx
 import React, { useContext } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import { Box, Flex, HStack, Text, Button } from '@chakra-ui/react';
 import { publicRoutes, protectedRoutes } from '../routes';
 import { UserContext } from '../userContext';
 
@@ -12,40 +12,47 @@ interface RouteType {
 }
 
 const Header: React.FC = () => {
-  const { user } = useContext(UserContext); // Pridobimo stanje prijavljenega uporabnika iz konteksta
+  const { user } = useContext(UserContext); // Retrieve user state from context
 
-  // Nastavimo vidne poti glede na to ali je uporabnik prijavljen ali ne
+  // Determine routes to display based on login status
   const routesToShow = user ? protectedRoutes : publicRoutes;
 
   return (
-    <div className="container">
-      <header className="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
-        <Link
-          to="/"
-          className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none"
-        >
-          <span className="fs-4">Your Voice</span>
+    <Box as="header" bg="gray.800" color="white" py={4} px={8} shadow="sm">
+      <Flex
+        maxW="1200px"
+        mx="auto"
+        align="center"
+        justify="space-between"
+        flexWrap="wrap"
+      >
+        {/* Brand Name */}
+        <Link to="/">
+          <Text fontSize="2xl" fontWeight="bold" letterSpacing="wide">
+            Your Voice
+          </Text>
         </Link>
 
-        <ul className="nav nav-pills">
-          {/* Prikaz poti glede na prijavo */}
+        {/* Navigation Links */}
+        <HStack as="nav" spacing={6}>
           {routesToShow
             .filter((route) => route.visible)
             .map((route: RouteType) => (
-              <li key={route.to} className="nav-item">
-                <NavLink
-                  to={route.to}
-                  className={({ isActive }) =>
-                    isActive ? 'nav-link active' : 'nav-link'
-                  }
-                >
-                  {route.name}
-                </NavLink>
-              </li>
+              <NavLink key={route.to} to={route.to}>
+                {({ isActive }) => (
+                  <Button
+                    variant={isActive ? 'solid' : 'ghost'}
+                    colorScheme={isActive ? 'teal' : 'whiteAlpha'}
+                    size="md"
+                  >
+                    {route.name}
+                  </Button>
+                )}
+              </NavLink>
             ))}
-        </ul>
-      </header>
-    </div>
+        </HStack>
+      </Flex>
+    </Box>
   );
 };
 

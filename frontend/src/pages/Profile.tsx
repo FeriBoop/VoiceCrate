@@ -23,13 +23,16 @@ import {
     Textarea,
   CloseButton,
   Table,
-  Tbody, Td, Tr, Th
+  Tbody, Td, Tr, Th,
+  Divider,
+  IconButton,
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
 import { useNavigate } from 'react-router-dom';
 import CustomModal from "../components/CustomModalProps";
 import axios from 'axios';
 import {User} from '../interfaces/User'
+import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
 
 const Profile: React.FC = () => {
     //modal window variables
@@ -59,6 +62,10 @@ const Profile: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const toggleOldPasswordVisibility = () => setShowOldPassword(!showOldPassword);
+  const toggleNewPasswordVisibility = () => setShowNewPassword(!showNewPassword);
 
   useEffect(() => {
     if (user) {
@@ -292,52 +299,52 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <Box p={6} maxW="container.md" mx="auto">
-      <Heading as="h2" size="xl" mb={6} textAlign="center">
+    <Box p={6} maxW="container.md" mx="auto" bg="gray.50" borderRadius="md" boxShadow="lg">
+      <Heading as="h2" size="xl" mb={6} textAlign="center" color="blue.600">
         Profil uporabnika
       </Heading>
-      <Stack spacing={4} mb={8}>
+      <Stack spacing={6} mb={8}>
         <Box>
-          <Text fontSize="lg" fontWeight="bold">
-                        Avatar:
+          <Text fontSize="lg" fontWeight="bold" color="gray.700">
+            Avatar:
           </Text>
-                    <Image
-                        src={
-                            user.avatar?.imageUrl
-                                ? 'http://localhost:3000' + user.avatar.imageUrl
-                                : '/images/avatar_placeholder.png'
-                        }
-                        alt={user.avatar?.imageName || "Placeholder Avatar"}
-                        boxSize="100px"
-                        objectFit="cover"
-                        borderRadius="md"
-                    />
+          <Image
+            src={
+              user.avatar?.imageUrl
+                ? `http://localhost:3000${user.avatar.imageUrl}`
+                : '/images/avatar_placeholder.png'
+            }
+            alt={user.avatar?.imageName || 'Placeholder Avatar'}
+            boxSize="100px"
+            objectFit="cover"
+            borderRadius="full"
+            border="2px solid"
+            borderColor="blue.500"
+          />
         </Box>
         <Box>
-          <Text fontSize="lg" fontWeight="bold">
-                        Uporabniško ime:
+          <Text fontSize="lg" fontWeight="bold" color="gray.700">
+            Uporabniško ime:
           </Text>
-                    <Text fontSize="md">{user.username}</Text>
+          <Text fontSize="md" color="gray.600">{user.username}</Text>
         </Box>
         <Box>
-          <Text fontSize="lg" fontWeight="bold">
-                        Opis:
+          <Text fontSize="lg" fontWeight="bold" color="gray.700">
+            Opis:
           </Text>
-          <Text fontSize="md">
-                        {user.bio}
-          </Text>
+          <Text fontSize="md" color="gray.600">{user.bio || 'Opis ni na voljo.'}</Text>
         </Box>
-                <Box>
-                    <Text fontSize="lg" fontWeight="bold">
-                        E-naslov:
-                    </Text>
-                    <Text fontSize="md">{user.email}</Text>
-                </Box>
+        <Box>
+          <Text fontSize="lg" fontWeight="bold" color="gray.700">
+            E-naslov:
+          </Text>
+          <Text fontSize="md" color="gray.600">{user.email}</Text>
+        </Box>
       </Stack>
-
+  
       {user.role === 'admin' && (
         <>
-          <Heading as="h3" size="lg" mb={4}>
+          <Heading as="h3" size="lg" mb={4} color="blue.600">
             Seznam uporabnikov
           </Heading>
           <Input
@@ -345,8 +352,9 @@ const Profile: React.FC = () => {
             value={searchTerm}
             onChange={handleSearch}
             mb={4}
+            focusBorderColor="blue.500"
           />
-          <Table variant="simple" size="sm">
+          <Table variant="striped" colorScheme="blue" size="sm">
             <Tbody>
               {filteredUsers.map((u) => (
                 <Tr key={u._id}>
@@ -368,106 +376,136 @@ const Profile: React.FC = () => {
           </Table>
         </>
       )}
-
+  
       <Button mt={6} colorScheme="blue" onClick={onOpen}>
         Uredi profil
       </Button>
-
+  
+      {/* Edit Profile Modal */}
       <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay/>
+        <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Uredi profil</ModalHeader>
-          <ModalCloseButton/>
+          <ModalHeader color="blue.600">Uredi profil</ModalHeader>
+          <ModalCloseButton />
           <ModalBody>
-            <FormLabel mb={2}>Nastavitve, ki jih lahko spreminjate brez gesla: </FormLabel>
-            <FormControl mb={4}>
-              <FormLabel>Opis</FormLabel>
-              <Textarea value={bio} onChange={(e) => setBio(e.target.value)}/>
-            </FormControl>
-            <FormControl mb={4}>
-              <FormLabel>Avatar</FormLabel>
-                            {(existingAvatar || newAvatar) && (
-                <HStack>
-                  <Image
-                                        src={
-                                            newAvatar
-                                                ? URL.createObjectURL(newAvatar)
-                                                : 'http://localhost:3000' + existingAvatar!.imageUrl
-                                        }
-                                        alt={newAvatar ? newAvatar.name : existingAvatar!.imageName}
-                    boxSize="50px"
-                                        objectFit="cover"
-                    borderRadius="md"
+            <Stack spacing={6}>
+              <Box>
+                <FormLabel>Opis</FormLabel>
+                <Textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Dodajte kratek opis"
+                  focusBorderColor="blue.500"
+                />
+              </Box>
+              <Box>
+                <FormLabel>Avatar</FormLabel>
+                {(existingAvatar || newAvatar) && (
+                  <HStack spacing={4}>
+                    <Image
+                      src={
+                        newAvatar
+                          ? URL.createObjectURL(newAvatar)
+                          : `http://localhost:3000${existingAvatar!.imageUrl}`
+                      }
+                      alt={newAvatar ? newAvatar.name : existingAvatar!.imageName}
+                      boxSize="50px"
+                      objectFit="cover"
+                      borderRadius="md"
+                    />
+                    <CloseButton onClick={handleRemoveAvatar} />
+                  </HStack>
+                )}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  mt={2}
+                  onChange={handleFileChange}
+                  focusBorderColor="blue.500"
+                />
+              </Box>
+              <Divider />
+              <Text fontWeight="bold" color="gray.700">
+                Nastavitve s trenutnim geslom
+              </Text>
+              <Stack spacing={4}>
+                <Box>
+                  <FormLabel>Uporabniško ime</FormLabel>
+                  <Input
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    focusBorderColor="blue.500"
                   />
-                  <CloseButton onClick={handleRemoveAvatar}/>
-                </HStack>
-              )}
-              <Input
-                type="file"
-                accept="image/*"
-                mt={2}
-                onChange={handleFileChange}
-              />
-            </FormControl>
-
-                        <hr/>
-                        <FormLabel mt={5} mb={4}>Nastavitve, za katere potrebujete vnesti svoje trenutno
-                            geslo: </FormLabel>
-
-
-                        <FormControl mb={4}>
-                            <FormLabel>Uporabniško ime</FormLabel>
-                            <Input
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                            />
-                        </FormControl>
-                        <FormControl mb={4}>
-                            <FormLabel>E-pošta</FormLabel>
-                            <Input value={email} onChange={(e) => setEmail(e.target.value)}/>
-                        </FormControl>
-
-            <FormControl mb={4}>
-              <FormLabel>Trenutno geslo</FormLabel>
-              <Input
-                type="password"
-                value={oldPassword}
-                onChange={(e) => setOldPassword(e.target.value)}
-              />
-            </FormControl>
-                        <hr/>
-                        <FormLabel mt={5} mb={4}>Spodaj lahko spremenite svoje geslo (če ga ne želite, samo pustite prazno)</FormLabel>
-
-            <FormControl mb={4}>
-                            <FormLabel>Novo geslo</FormLabel>
-              <Input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
-            </FormControl>
+                </Box>
+                <Box>
+                  <FormLabel>E-naslov</FormLabel>
+                  <Input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    focusBorderColor="blue.500"
+                  />
+                </Box>
+                <Box>
+                  <FormLabel>Trenutno geslo</FormLabel>
+                  <Box display="flex" alignItems="center">
+                    <Input
+                      type={showOldPassword ? 'text' : 'password'}
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      focusBorderColor="blue.500"
+                    />
+                    <IconButton
+                      aria-label="Toggle old password visibility"
+                      icon={showOldPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={toggleOldPasswordVisibility}
+                      variant="link"
+                      ml={2}
+                    />
+                  </Box>
+                </Box>
+                <Box>
+                  <FormLabel>Novo geslo</FormLabel>
+                  <Box display="flex" alignItems="center">
+                    <Input
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      focusBorderColor="blue.500"
+                    />
+                    <IconButton
+                      aria-label="Toggle new password visibility"
+                      icon={showNewPassword ? <ViewOffIcon /> : <ViewIcon />}
+                      onClick={toggleNewPasswordVisibility}
+                      variant="link"
+                      ml={2}
+                    />
+                  </Box>
+                </Box>
+              </Stack>
+            </Stack>
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" onClick={handleUpdate}>
+            <Button colorScheme="blue" onClick={handleUpdate} mr={3}>
               Shrani
             </Button>
             <Button onClick={onClose}>Prekliči</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-            <CustomModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={modalTitle}
-                message={modalMessage}
-                backgroundColor={backgroundColor}
-                headerColor={headerColor}
-                bodyColor={bodyColor}
-                duration={1500}
-            />
+  
+      {/* Custom Modal */}
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={modalTitle}
+        message={modalMessage}
+        backgroundColor={backgroundColor}
+        headerColor={headerColor}
+        bodyColor={bodyColor}
+        duration={1500}
+      />
     </Box>
-  );
+  );  
 };
 
 export default Profile;

@@ -18,7 +18,9 @@ import {
   ModalFooter,
   Textarea,
   useDisclosure,
+  useBreakpointValue,
 } from '@chakra-ui/react';
+import { ChevronLeftIcon } from '@chakra-ui/icons';
 import { UserContext } from '../userContext';
 import ImageSlideshow from "./ImageSlideShow";
 
@@ -56,9 +58,10 @@ const PostDetail: React.FC = () => {
   const [comments, setComments] = useState<Comment[] | null>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
-  const {isOpen, onOpen, onClose} = useDisclosure();
+  const { isOpen, onOpen: openModal, onClose: closeModal } = useDisclosure();
   const {user} = useContext(UserContext);
   const navigate = useNavigate();
+  const arrowSize = useBreakpointValue({ base: '4', md: '6' });
 
   // Create ref for the textarea
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -128,7 +131,7 @@ const PostDetail: React.FC = () => {
       })
       .then(() => {
         setNewComment(''); // Clear input
-        onClose();
+        closeModal(); // Close modal
         fetchPost(); // Reload post to get updated comments
       })
       .catch((error) => {
@@ -167,55 +170,82 @@ const PostDetail: React.FC = () => {
       borderWidth="1px"
       borderRadius="lg"
       shadow="lg"
+      bg="white"
+      _dark={{ bg: 'gray.800', color: 'gray.200' }}
     >
-      <Button onClick={() => {
-        const lastPage = localStorage.getItem('lastPage');
-        const page = lastPage ? parseInt(lastPage) : 1; // Default to page 1 if no page is saved
-        navigate(`/posts?page=${page}`);
-      }} colorScheme="teal" mb={6}>
+      {/* Back Button */}
+      <Button
+        onClick={() => {
+          const lastPage = localStorage.getItem('lastPage');
+          const page = lastPage ? parseInt(lastPage) : 1;
+          navigate(`/posts?page=${page}`);
+        }}
+        colorScheme="teal"
+        mb={6}
+        size="lg"
+        variant="solid"
+        leftIcon={<ChevronLeftIcon w={arrowSize} h={arrowSize} />}
+      >
         Nazaj na objave
       </Button>
+
+      {/* Post Content */}
       {loading ? (
-        <Spinner size="xl"/>
+        <Flex justify="center" align="center" h="200px">
+          <Spinner size="xl" thickness="4px" color="teal.500" />
+        </Flex>
       ) : post ? (
         <>
+          {/* Post Title */}
           <Heading as="h2" size="xl" mb={4} textAlign="center" color="teal.600">
             {post.title}
           </Heading>
-          <Divider mb={4}/>
+          <Divider mb={4} />
+
+          {/* Post Details */}
           <Flex justify="space-between" color="gray.500" fontSize="sm" mb={6}>
             <Text>
-              Kategorija: <strong>{post.category}</strong>
+              <strong>Kategorija:</strong> {post.category}
             </Text>
             <Text>
-              Datum: <b>{new Date(post.createdAt).toLocaleDateString()}</b>
+              <strong>Datum:</strong> {new Date(post.createdAt).toLocaleDateString()}
             </Text>
           </Flex>
+
+          {/* Slideshow */}
           <ImageSlideshow images={post.images} />
-          <Text color="gray.500" fontSize="sm" mb={4}>
-            Avtor:{' '}
-            <strong>{post.userId?.username || 'Unknown user'}</strong>
+
+          {/* Author Info */}
+          <Text color="gray.500" fontSize="sm" mt={12} mb={6}> {/* Increased margin-bottom */}
+            <strong>Avtor:</strong> {post.userId?.username || 'Unknown user'}
           </Text>
+
+          {/* Post Content */}
           <Text fontSize="md" lineHeight="tall" mt={4} color="gray.700">
             {post.content}
           </Text>
-          <VoteWidget postId={post._id}/>
-          <Divider my={6}/>
+
+          {/* Voting Widget */}
+          <VoteWidget postId={post._id} />
+
+          {/* Divider */}
+          <Divider my={6} />
+
+          {/* Comments Section */}
           <Heading as="h3" size="md" mb={4}>
             Komentarji
           </Heading>
-
-          <Button colorScheme="teal" mb={4} onClick={onOpen}>
+          <Button colorScheme="teal" mb={4} onClick={openModal}>
             Dodaj komentar
           </Button>
 
+          {/* Comments List */}
           {comments && comments.length > 0 ? (
-            <VStack spacing={4} align="start">
+            <VStack spacing={4} align="stretch">
               {comments
                 .sort(
                   (a, b) =>
-                    new Date(b.updatedAt).getTime() -
-                    new Date(a.updatedAt).getTime()
+                    new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
                 )
                 .map((comment) => (
                   <Box
@@ -223,44 +253,41 @@ const PostDetail: React.FC = () => {
                     p={4}
                     borderWidth="1px"
                     borderRadius="md"
-                    w="full"
+                    bg="gray.50"
+                    _dark={{ bg: 'gray.700' }}
+                    shadow="sm"
                   >
-                    <Text fontSize="sm" color="gray.500">
-                      {comment.userId.username} -{' '}
-                      {new Date(comment.createdAt).toLocaleString()}
-                    </Text>
-                    <Text>{comment.content}</Text>
-                    {(user?._id === comment.userId._id || user?.role === 'admin') && (
-                      <Button
-                        colorScheme="red"
-                        size="sm"
-                        mt={2}
-                        onClick={() => handleCommentDelete(comment._id)}
-                      >
-                        Delete
-                      </Button>
-                    )}
+                    <Flex justify="space-between" align="center">
+                      <Text fontSize="sm" color="gray.500">
+                        {comment.userId.username} -{' '}
+                        {new Date(comment.createdAt).toLocaleString()}
+                      </Text>
+                      {(user?._id === comment.userId._id || user?.role === 'admin') && (
+                        <Button
+                          colorScheme="red"
+                          size="xs"
+                          onClick={() => handleCommentDelete(comment._id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </Flex>
+                    <Text mt={2}>{comment.content}</Text>
                   </Box>
                 ))}
             </VStack>
           ) : (
-            <Text color="gray.500">
-              Ni še komentarjev bodi prvi ki boš komentiral!
-            </Text>
+            <Text color="gray.500">Ni še komentarjev. Bodi prvi, ki boš komentiral!</Text>
           )}
 
-          <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            initialFocusRef={textareaRef}
-          >
-            <ModalOverlay/>
+          {/* Add Comment Modal */}
+          <Modal isOpen={isOpen} onClose={closeModal}>
+            <ModalOverlay />
             <ModalContent>
               <ModalHeader>Dodaj komentar</ModalHeader>
-              <ModalCloseButton/>
+              <ModalCloseButton />
               <ModalBody>
                 <Textarea
-                  ref={textareaRef}
                   placeholder="Enter your comment..."
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -270,7 +297,7 @@ const PostDetail: React.FC = () => {
                 <Button colorScheme="teal" onClick={handleCommentSubmit}>
                   Dodaj
                 </Button>
-                <Button onClick={onClose} ml={3}>
+                <Button onClick={closeModal} ml={3}>
                   Prekliči
                 </Button>
               </ModalFooter>
@@ -278,10 +305,12 @@ const PostDetail: React.FC = () => {
           </Modal>
         </>
       ) : (
-        <Text color="red.500">Post not found.</Text>
+        <Text color="red.500" textAlign="center">
+          Post not found.
+        </Text>
       )}
     </Box>
-  );
+  );  
 };
 
 export default PostDetail;
