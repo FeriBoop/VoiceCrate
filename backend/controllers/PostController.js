@@ -290,11 +290,7 @@ module.exports = {
                 });
             }
 
-            await PostModel.findByIdAndRemove(id, {useFindAndModify: false, session: session}, function (err) {
-                if (!err) return;
-                console.log(err);
-                throw err;
-            });
+            await PostModel.findByIdAndRemove(id, {useFindAndModify: false})
 
             res.status(200).json({})
         }).catch((err) => {

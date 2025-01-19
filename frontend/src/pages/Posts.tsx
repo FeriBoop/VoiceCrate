@@ -219,6 +219,7 @@ const Posts: React.FC = () => {
                     src={`http://localhost:3000${post.images[0].imageUrl}`}
                     alt={post.images[0].imageName || "Post image"}
                     style={{
+                      maxWidth: "300px",
                       width: "60%",
                       height: "auto",
                       borderRadius: "12px",
