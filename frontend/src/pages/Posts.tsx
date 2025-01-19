@@ -10,12 +10,13 @@ import {
   Input,
   HStack,
   IconButton,
-  Flex
+  Flex,
+  Select
 } from '@chakra-ui/react';
 import { UserContext } from '../userContext';
 import AddPostModal from '../components/AddPostModal';
 import { Post } from '../interfaces/Post';
-import { Link, useNavigate, useLocation } from 'react-router-dom';  // Add useNavigate
+import { Link, useNavigate, useLocation } from 'react-router-dom';  
 import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import VoteWidget from "../components/VoteWidget";
 
@@ -27,26 +28,24 @@ const Posts: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { user } = useContext(UserContext);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPosts, setTotalPosts] = useState(0); // To store total number of posts
+  const [totalPosts, setTotalPosts] = useState(0);
 
   const postsPerPage = 10;
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
   const location = useLocation();
 
-  // Filter states with initial values from localStorage
-  const [categoryFilter, setCategoryFilter] = useState(
-    localStorage.getItem('categoryFilter') || ''
-  );
-  const [authorFilter, setAuthorFilter] = useState(
-    localStorage.getItem('authorFilter') || ''
-  );
-  const [dateFilter, setDateFilter] = useState(
-    localStorage.getItem('dateFilter') || ''
-  );
+  // Filter states
+  const [categoryFilter, setCategoryFilter] = useState(localStorage.getItem('categoryFilter') || '');
+  const [authorFilter, setAuthorFilter] = useState(localStorage.getItem('authorFilter') || '');
+  const [dateFilter, setDateFilter] = useState(localStorage.getItem('dateFilter') || '');
 
-  const loadPosts = (page: number) => {
+  // Sort and Order states
+  const [sortBy, setSortBy] = useState('date');
+  const [orderBy, setOrderBy] = useState('asc');
+
+  const loadPosts = (page: number, sortBy: string = 'date', orderBy: string = 'asc') => {
     setLoading(true);
-    fetch(`http://localhost:3000/post?page=${page}&limit=${postsPerPage}`)
+    fetch(`http://localhost:3000/post?page=${page}&limit=${postsPerPage}&sortBy=${sortBy}&orderBy=${orderBy}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -55,12 +54,12 @@ const Posts: React.FC = () => {
       })
       .then((data) => {
         console.log("Fetched data:", data);
-        const reversedPosts = data.posts.reverse();
+        const reversedPosts = data.posts.reverse(); // Reverse posts if needed
         setPosts(reversedPosts);
         setTotalPosts(data.totalPosts);
-        setFilteredPosts(reversedPosts); // Set the initial filtered posts
+        setFilteredPosts(reversedPosts); 
         setLoading(false);
-        localStorage.setItem('lastPage', page.toString()); // Save current page to localStorage
+        localStorage.setItem('lastPage', page.toString()); 
       })
       .catch((error) => {
         console.error('Error loading posts:', error);
@@ -72,11 +71,11 @@ const Posts: React.FC = () => {
     const savedPage = localStorage.getItem('lastPage');
     const initialPage = savedPage ? parseInt(savedPage) : 1;
     setCurrentPage(initialPage);
-    loadPosts(initialPage);
-  }, []);
+    loadPosts(initialPage, sortBy, orderBy);
+  }, [sortBy, orderBy]);
 
   useEffect(() => {
-    loadPosts(currentPage);
+    loadPosts(currentPage, sortBy, orderBy);
   }, [currentPage]);
 
   useEffect(() => {
@@ -87,7 +86,7 @@ const Posts: React.FC = () => {
   }, [posts]);
 
   const handlePostAdded = () => {
-    loadPosts(currentPage);
+    loadPosts(currentPage, sortBy, orderBy);
     setSelectedPost(null);
   };
 
@@ -97,12 +96,10 @@ const Posts: React.FC = () => {
   };
 
   const handleDeletePost = (id: string) => {
-    fetch(`http://localhost:3000/post/${id}`, {
-      method: 'DELETE',
-    })
+    fetch(`http://localhost:3000/post/${id}`, { method: 'DELETE' })
       .then((response) => {
         if (response.ok) {
-          loadPosts(currentPage);
+          loadPosts(currentPage, sortBy, orderBy);
         } else {
           console.error('Error deleting post');
         }
@@ -128,12 +125,9 @@ const Posts: React.FC = () => {
 
   const handleFilterChange = () => {
     const filtered = posts.filter((post) => {
-      const matchesCategory =
-        !categoryFilter || post.category.toLowerCase().includes(categoryFilter.toLowerCase());
-      const matchesAuthor =
-        !authorFilter || post.userId?.username?.toLowerCase().includes(authorFilter.toLowerCase());
-      const matchesDate =
-        !dateFilter || new Date(post.createdAt).toISOString().slice(0, 10) === dateFilter;
+      const matchesCategory = !categoryFilter || post.category.toLowerCase().includes(categoryFilter.toLowerCase());
+      const matchesAuthor = !authorFilter || post.userId?.username?.toLowerCase().includes(authorFilter.toLowerCase());
+      const matchesDate = !dateFilter || new Date(post.createdAt).toISOString().slice(0, 10) === dateFilter;
       return matchesCategory && matchesAuthor && matchesDate;
     });
     setFilteredPosts(filtered);
@@ -186,6 +180,33 @@ const Posts: React.FC = () => {
         </Stack>
       </Box>
   
+      {/* Sorting Section */}
+      <Box mb={8} p={6} bg="white" borderRadius="lg" shadow="md">
+        <Heading fontSize="lg" mb={4} color="gray.700">
+          Sortiraj
+        </Heading>
+        <Stack direction={{ base: "column", md: "row" }} spacing={4}>
+          <Select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            focusBorderColor="teal.500"
+          >
+            <option value="date">Datum</option>
+            <option value="name">Naslov</option>
+            <option value="score">Število točk</option>
+            <option value="commentsNum">Število komentarjev</option>
+          </Select>
+          <Select
+            value={orderBy}
+            onChange={(e) => setOrderBy(e.target.value)}
+            focusBorderColor="teal.500"
+          >
+            <option value="asc">Naraščajoče</option>
+            <option value="desc">Padajoče</option>
+          </Select>
+        </Stack>
+      </Box>
+
       {/* Posts Section */}
       {loading ? (
         <Flex justify="center" align="center" mt={12}>
@@ -268,7 +289,7 @@ const Posts: React.FC = () => {
           ))}
         </Stack>
       )}
-  
+
       {/* Pagination */}
       <Flex justify="space-between" align="center" mt={12}>
         <IconButton
@@ -289,8 +310,8 @@ const Posts: React.FC = () => {
           colorScheme="teal"
         />
       </Flex>
-  
-      {/* Add Post Modal */}
+
+      {/* AddPostModal */}
       <AddPostModal
         isOpen={isOpen}
         onClose={() => {
@@ -301,7 +322,7 @@ const Posts: React.FC = () => {
         post={selectedPost}
       />
     </Box>
-  );  
+  );
 };
 
 export default Posts;
